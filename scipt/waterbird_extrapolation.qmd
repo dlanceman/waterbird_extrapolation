@@ -42,15 +42,11 @@ Let's import the datasets we need for this workflow:
 ```{r Import_boundary_waterbirds}
 setwd("C:/Users/z5204897/OneDrive - UNSW/Desktop/RA/Projects/2024_Cumbung_extrapolation/waterbird_extrapolation_R/data/")
 
-cumbung_eco <- st_read("Cumbung_ecological_minus_lakes.shp")
-cumbung_noBac <- st_read("Cumbung_ecological_minus_lakes_and_Baconian.shp")
-Baconian <- st_read("Baconian_Swamp_boundary.shp")
-cumbung_M <- st_read("cumbung_boundary_lake_combos/Cumbung_noBac_Marool.shp")
-cumbung_B <- st_read("cumbung_boundary_lake_combos/Cumbung_noBac_Blindbungi.shp")
-cumbung_MB <- st_read("cumbung_boundary_lake_combos/Cumbung_noBac_Blindbungi_Marool.shp")
-cumbung_Bac_M <- st_read("cumbung_boundary_lake_combos/Cumbung_Bac_Marool.shp")
-cumbung_Bac_B <- st_read("cumbung_boundary_lake_combos/Cumbung_Bac_Blindbungi.shp")
-cumbung_Bac_MB <- st_read("cumbung_boundary_lake_combos/Cumbung_Bac_Blindbungi_Marool.shp")
+cumbung_eco <- st_read("boundary/Cumbung_eco_Blindbungi_dissolved.shp")
+cumbung_noBac <- st_read("boundary/Cumbung_eco_noBac.shp")
+Baconian <- st_read("boundary/Baconian_Swamp_boundary.shp")
+cumbung_noMarool <- st_read("boundary/Cumbung_eco_noMarool.shp")
+cumbung_noBac_noM <- st_read("boundary/Cumbung_eco_noBac_noMarool.shp")
 
 wb_2010 <- read_excel("waterbirds/2010_Cumbung_PDF-data.xlsx")
 wb_2011 <- read_excel("waterbirds/2011_Cumbung_PDF-data.xlsx")
@@ -66,6 +62,8 @@ setwd("C:/Users/z5204897/OneDrive - UNSW/Desktop/RA/Projects/2024_Cumbung_extrap
 
 # 2010 - clarify whether these are meandering or transects. only one count
 trk_2010 <- st_read("2010_lines_for_ecological_transects.shp")
+trk_2010_AA_C1 <- st_read("2010_Cumbung_AA_C1.shp")
+trk_2010_AA_C2 <- st_read("2010_Cumbung_AA_C2.shp")
 
 # 2011 - C1 and C2 combined
 trk_2011 <- st_read("2011_lines_for_ecological_transects.shp")
@@ -86,7 +84,8 @@ trk_2015 <- st_read("2015_lines_for_ecological_transects.shp")
 # 2016 - C1 and C2 are combined in the meandering tracklogs. 20161107 covers Baconian swamp.
 trk_2016_transect <- st_read("2016 - Cumbung tracklog - transects - 10-1.shp")
 trk_20161109_mean <- st_read("20161109_lines_for_ecological_transects.shp")
-trk_20161107_mean <- st_read("20161107_Baconian_Swamp_lines.shp")
+trk_20161107_Bac_C1 <- st_read("20161107_BaconianSwamp_C1_lines.shp")
+trk_20161107_Bac_C2 <- st_read("20161107_BaconianSwamp_C2_lines.shp")
 
 # 2017 - C1 and C2 combined
 trk_2017 <- st_read("2017_lines_for_ecological_transects.shp")
@@ -152,14 +151,12 @@ Next, we need to prepare our data.
 cumbung_eco <- st_transform(cumbung_eco, 28355)  
 cumbung_noBac <- st_transform(cumbung_noBac, 28355)
 Baconian <- st_transform(Baconian, 28355)
-cumbung_M <- st_transform(cumbung_M, 28355)
-cumbung_B <- st_transform(cumbung_B, 28355)
-cumbung_MB <- st_transform(cumbung_MB, 28355)
-cumbung_Bac_M <- st_transform(cumbung_Bac_M, 28355)
-cumbung_Bac_B <- st_transform(cumbung_Bac_B, 28355)
-cumbung_Bac_MB <- st_transform(cumbung_Bac_MB, 28355)
+cumbung_noBac_noM <- st_transform(cumbung_noBac_noM, 28355)
+cumbung_noMarool <- st_transform(cumbung_noMarool, 28355)
 
-trk_2010 <- st_transform(trk_2010, 28355)  
+trk_2010 <- st_transform(trk_2010, 28355) 
+trk_2010_AA_C1 <- st_transform(trk_2010_AA_C1, 28355)
+trk_2010_AA_C2 <- st_transform(trk_2010_AA_C2, 28355)
 trk_2011 <- st_transform(trk_2011, 28355)
 trk_2012_C1 <- st_transform(trk_2012_C1, 28355)
 trk_2012_C2 <- st_transform(trk_2012_C2, 28355)
@@ -167,7 +164,8 @@ trk_2013 <- st_transform(trk_2013, 28355)
 trk_2014 <- st_transform(trk_2014, 28355)
 trk_2015 <- st_transform(trk_2015, 28355)
 trk_2016_transect <- st_transform(trk_2016_transect, 28355)
-trk_20161107_mean <- st_transform(trk_20161107_mean, 28355) # warnings
+trk_20161107_Bac_C1 <- st_transform(trk_20161107_Bac_C1, 28355) 
+trk_20161107_Bac_C2 <- st_transform(trk_20161107_Bac_C2, 28355)
 trk_20161109_mean <- st_transform(trk_20161109_mean, 28355)
 trk_2017 <- st_transform(trk_2017, 28355)
 trk_2018 <- st_transform(trk_2018, 28355)
@@ -200,7 +198,9 @@ inun_2024 <- projectRaster(inun_2024, crs=28355)
 # check coordinate systems are the same
 ggplot() + 
   geom_sf(data = cumbung_eco, color = "red") +
-  geom_sf(data = trk_2010) 
+  geom_sf(data = trk_2010) +
+  geom_sf(data = trk_2010_AA_C1, color = "green") +
+  geom_sf(data = trk_2010_AA_C2, color = "blue")
 
 ggplot() + 
   geom_sf(data = cumbung_eco, color = "red") +
@@ -226,7 +226,8 @@ ggplot() +
 ggplot() + 
   geom_sf(data = cumbung_eco, color = "red") +
   #geom_sf(data = trk_2016_transect) +
-  geom_sf(data = trk_20161107_mean, color = "blue") +
+  geom_sf(data = trk_20161107_Bac_C1, color = "blue") +
+  geom_sf(data = trk_20161107_Bac_C2, color = "yellow") +
   geom_sf(data = trk_20161109_mean, color = "green") 
 # transect data have an error and are not plotting
 
@@ -255,8 +256,9 @@ ggplot() +
   geom_sf(data = trk_2022)
 
 ggplot() + 
-  geom_sf(data = cumbung_eco, color = "red") +
-  geom_sf(data = trk_2024_Baconian) +
+  geom_sf(data = cumbung_noBac_noM, color = "red") +
+  geom_sf(data = Baconian, color = "black") +
+  geom_sf(data = trk_2024_Baconian, color = "pink") +
   geom_sf(data = trk_2024_C1, color = "blue") +
   geom_sf(data = trk_2024_C2, color = "green") +
   geom_sf(data = trk_2024_transect, color = "yellow") 
@@ -264,11 +266,23 @@ ggplot() +
 
 -   clip and buffer tracklogs (**This section onwards needs to be updated for all years other than 2024**)
 
-    -   clip to cumbung boundary, then separate the two tracklogs from the two different dates of flights, and Count 1 (C1) vs Count 2 (C2)
+    -   for cases where they are merged, separate the tracklogs from different dates and/or counts
     -   buffer distance is 100m for transects and 150m for meandering tracklogs
     -   merge meandering and transect tracklogs where both types have been measured (for C1 and C2 separately)
 
 ```{r Prepare_tracklog_data}
+# 2010
+trk_2010_buff <- trk_2010 %>% 
+  st_buffer(dist = 150)
+
+trk_2010_AA_C1_buff <- trk_2010_AA_C1 %>% 
+  st_buffer(dist = 150)
+
+trk_2010_AA_C2_buff <- trk_2010_AA_C2 %>% 
+  st_buffer(dist = 150)
+
+
+
 trk_2010_c = st_intersection(trk_2010_nsw, cumbung_eco)
 plot(st_geometry(trk_2010_c))
 
@@ -308,15 +322,12 @@ plot(st_geometry(trk_2024_Baconian_buff))
 
 trk_2024_C1_buff <- trk_2024_C1 %>% 
   st_buffer(dist = 150)
-plot(st_geometry(trk_2024_C1_buff))
 
 trk_2024_C2_buff <- trk_2024_C2 %>% 
   st_buffer(dist = 150)
-plot(st_geometry(trk_2024_C2_buff))
 
 trk_2024_transect_buff <- trk_2024_transect %>% 
-  st_buffer(dist = 150)
-plot(st_geometry(trk_2024_transect_buff))
+  st_buffer(dist = 100)
 
 trk_2024_C1t_buff <- bind_rows(trk_2024_C1_buff,trk_2024_transect_buff)
 plot(st_geometry(trk_2024_C1t_buff))
@@ -329,7 +340,7 @@ plot(st_geometry(trk_2024_C2t_buff))
 
 Now, clip the inundation rasters by the buffered tracklogs to determine the inundated area surveyed by tracklogs. Also clip inundation rasters to cumbung ecological boundary and calculate the inundated area in this total boundary. Then calculate the proportion of inundated area surveyed out of the total inundated area.
 
-Using different boundary files depending on if Baconian swamp, Blindbungi swamp and Marool lake are included as part of the cumbung ecological boundary for that year's survey:
+Using different boundary files depending on if Baconian swamp and Marool lake are included as part of the cumbung ecological boundary for that year's survey:
 
 -   2010:
 
@@ -359,10 +370,52 @@ Using different boundary files depending on if Baconian swamp, Blindbungi swamp 
 
 -   2023:
 
--   2024: Baconian separate, Blindbungi combined
+-   2024: Baconian separate, Marool?
+
+For years with transect data, the output needed for input into TDW is an overall area and percentage inundated of the entire Great Cumbung Swamp, and an area and percentage inundated of each buffered tracklog. The names of each tracklog section are stored in the attribute tables of the shapefiles under the field "TransLabel".
+
+```{r AreasProportions}
+# Function to calculate area and proportion in a specific area
+# input the year and name in parentheses
+AreaProportionFn <- function(year,name,rasterf,boundary){
+  y <- rasterf %>% 
+  crop(extent(boundary)) %>% 
+  mask(boundary) # clip the inundation raster to the cumbung boundary
+  
+  g <- as.data.frame(freq(y)) %>% subset(value == 1)
+  g$area <- g$count # calculate no. cells inundated within the cumbung boundary
+  
+  print(paste0("In ", year, ", ", name, " area was ", round(st_area(boundary)/10000), " ha, and ", name, " inundated proportion was ", round(as.numeric(g$area*30*30/st_area(boundary) * 100),2), "%"))
+  # calculate proportion inundated out of the whole area (noting that we need to multiply the number of cells in the inundated raster by 30x30 as that's the size of the cells)
+  }
+
+
+# 2024
+AreaProportionFn("2024", "Overall wetland", inun_2024,cumbung_noBac_noM)
+AreaProportionFn("2024", "Baconian Swamp", inun_2024,Baconian)
+AreaProportionFn("2024", "Baconian Swamp transect", inun_2024, trk_2024_Baconian_buff)
+AreaProportionFn("2024", "Cumbung T1", inun_2024, trk_2024_transect_buff[7,])
+AreaProportionFn("2024", "Cumbung T2", inun_2024, trk_2024_transect_buff[8,])
+AreaProportionFn("2024", "Cumbung T3", inun_2024, trk_2024_transect_buff[9,])
+AreaProportionFn("2024", "Cumbung T4", inun_2024, trk_2024_transect_buff[10,])
+AreaProportionFn("2024", "Cumbung T5", inun_2024, trk_2024_transect_buff[1,])
+AreaProportionFn("2024", "Cumbung T6", inun_2024, trk_2024_transect_buff[2,])
+AreaProportionFn("2024", "Cumbung T7", inun_2024, trk_2024_transect_buff[3,])
+AreaProportionFn("2024", "Cumbung T8", inun_2024, trk_2024_transect_buff[4,])
+AreaProportionFn("2024", "Cumbung T9", inun_2024, trk_2024_transect_buff[5,])
+AreaProportionFn("2024", "Cumbung T10", inun_2024, trk_2024_transect_buff[6,])
+AreaProportionFn("2024", "Count 1 Cumbung 1", inun_2024, trk_2024_C1_buff[1,])
+AreaProportionFn("2024", "Count 1 Cumbung North 3", inun_2024, trk_2024_C1_buff[2,])
+AreaProportionFn("2024", "Count 1 Cumbung Lake", inun_2024, trk_2024_C1_buff[3,])
+AreaProportionFn("2024", "Count 2 Cumbung 1", inun_2024, trk_2024_C2_buff[1,])
+AreaProportionFn("2024", "Count 2 Cumbung Lake", inun_2024, trk_2024_C2_buff[2,])
+```
+
+The following chunk calculates the overall percentage of inundated area in the total wetland that was surveyed in all tracklogs together. This is the input in TDW for years without transect data and should be used as a quality check in years with transect data.
 
 ```{r Inundation_areas}
-inun_prop_surveyed <- function(rasterf,tracklog,boundary){
+# input the year, location and count number (countno -- 1 or 2) in parentheses
+inun_prop_surveyed <- function(year,location,countno,rasterf,tracklog,boundary){
   x <- rasterf %>% 
   crop(extent(tracklog)) %>% 
   mask(tracklog) # clip the inundation raster to the tracklog
@@ -377,7 +430,7 @@ inun_prop_surveyed <- function(rasterf,tracklog,boundary){
   g <- as.data.frame(freq(y)) %>% subset(value == 1)
   g$area <- g$count # calculate no. cells inundated within the cumbung boundary
   
-  print(f$area /g$area * 100) # now calculate what percentage of the total (cumbung) inundated area was surveyed within the tracklog area
+  print(paste0("In ", year, ", at ", location, " in count ", countno, ", the proportion of total inundated area surveyed was ", round(f$area /g$area * 100, 2), "%")) # now calculate what percentage of the total (cumbung) inundated area was surveyed within the tracklog area
 }
 
 #Prop <- inun_prop_surveyed(inun_2010, trk_20101105_c)
@@ -385,9 +438,9 @@ Prop2010 <- inun_prop_surveyed(inun_2010, trk_20101117_c, cumbung_eco)
 Prop2016 <- inun_prop_surveyed(inun_2016, trk_2016_transect_buff, cumbung_eco)
 #Prop <- inun_prop_surveyed(inun_2016, trk_20161107_mean_buff)
 
-Prop2024Bac <- inun_prop_surveyed(inun_2024,  trk_2024_Baconian_buff, Baconian)
-Prop_2024C1 <- inun_prop_surveyed(inun_2024, trk_2024_C1t_buff, cumbung_B)
-Prop_2024C2 <- inun_prop_surveyed(inun_2024, trk_2024_C2t_buff, cumbung_B)
+Prop2024Bac <- inun_prop_surveyed("2024", "Baconian Swamp", "1", inun_2024,  trk_2024_Baconian_buff, Baconian)
+Prop_2024C1 <- inun_prop_surveyed("2024", "Cumbung Swamp", "1", inun_2024, trk_2024_C1t_buff, cumbung_noBac_noM)
+Prop_2024C2 <- inun_prop_surveyed("2024", "Cumbung Swamp", "2", inun_2024, trk_2024_C2t_buff, cumbung_noBac_noM)
 ```
 
 ## 4. Waterbird calculations
