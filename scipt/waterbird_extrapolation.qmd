@@ -21,11 +21,10 @@ library(sf)
 library(readxl)
 library(raster)
 library(terra)
+library(here)
 ```
 
-Next, let's set up our working directory. The path listed below in "setwd" can be replaced with whatever directory you're working in.
-
-Let's import the datasets we need for this workflow:
+Next, let's import the datasets we need for this workflow:
 
 -   a shapefile of the Great Cumbung Swamp, with lakes clipped out (cumbung_eco)
 
@@ -37,10 +36,10 @@ Let's import the datasets we need for this workflow:
 
 -   shapefiles with combinations of Baconian swamp, Marool Lake and Blindbungi swamp included as part of the cumbung ecological boundary (cumbung_M, cumbung_B, cumbung_MB, cumbung_Bac_M, cumbung_Bac_B, cumbung_Bac_M) for years where lakes were counted as part of transects, so need to be included in the inundation area
 
--   an excel file of waterbird records, with named locations, for each year (wb_2010, etc)
+-   an excel file of waterbird records, with named locations, for each year (wb_2010, etc). Note this is not necessary as this step is being done within TDW now. But if you have the data, you can run them here as a check to make sure TDW is processing data the same way.
 
 ```{r Import_boundary_waterbirds}
-setwd("C:/Users/z5204897/OneDrive - UNSW/Desktop/RA/Projects/2024_Cumbung_extrapolation/waterbird_extrapolation_R/data/")
+setwd(here("data/"))
 
 cumbung_eco <- st_read("boundary/Cumbung_eco_Blindbungi_dissolved.shp")
 cumbung_noBac <- st_read("boundary/Cumbung_eco_noBac.shp")
@@ -58,15 +57,17 @@ Import tracklogs.
 -   a shapefile of the aerial survey tracklog for each year, pre-clipped in QGIS for actual surveyed tracklog areas (rather than areas where the plane flew, but waterbirds were not surveyed)
 
 ```{r Import_tracklogs}
-setwd("C:/Users/z5204897/OneDrive - UNSW/Desktop/RA/Projects/2024_Cumbung_extrapolation/waterbird_extrapolation_R/data/tracklogs/Use_these/")
+setwd(here("data/tracklogs/Use_these/"))
 
 # 2010 - clarify whether these are meandering or transects. only one count
 trk_2010 <- st_read("2010_lines_for_ecological_transects.shp")
 trk_2010_AA_C1 <- st_read("2010_Cumbung_AA_C1.shp")
 trk_2010_AA_C2 <- st_read("2010_Cumbung_AA_C2.shp")
 
-# 2011 - C1 and C2 combined
+# 2011 - C1 and C2 combined, but also blindbungi extra with C1 and C2 separate
 trk_2011 <- st_read("2011_lines_for_ecological_transects.shp")
+trk_2011_blind_C1 <- st_read("2011-Cumbung-tracklog-C1-blindbungi.shp")
+trk_2011_blind_C2 <- st_read("2011-Cumbung-tracklog-C2-blindbungi.shp")
 
 # 2012
 trk_2012_C1 <- st_read("2012_C1_lines.shp")
@@ -77,6 +78,8 @@ trk_2013 <- st_read("2013_layers_for_ecological_transects.shp")
 
 # 2014 - C1 and C2 combined
 trk_2014 <- st_read("2014_lines_for_ecological_transects.shp")
+trk_2014_blind_C1 <- st_read("2014-Cumbung-tracklog-blindbungi-C1-path.shp")
+trk_2014_blind_C2 <- st_read("2014-Cumbung-tracklog-blindbungi-C2-path.shp")
 
 # 2015 - C1 and C2 combined
 trk_2015 <- st_read("2015_lines_for_ecological_transects.shp")
@@ -89,6 +92,8 @@ trk_20161107_Bac_C2 <- st_read("20161107_BaconianSwamp_C2_lines.shp")
 
 # 2017 - C1 and C2 combined
 trk_2017 <- st_read("2017_lines_for_ecological_transects.shp")
+trk_2017_blind_C1 <- st_read("2017_Cumbung_Blindbungi_C1.shp")
+trk_2017_blind_C2 <- st_read("2017_Cumbung_Blindbungi_C2.shp")
 
 # 2018 - C1 and C2 combined
 trk_2018 <- st_read("2018_lines_for_ecological_transects.shp")
@@ -114,6 +119,8 @@ trk_2024_C1 <- st_read("2024-cumbung-meandering-C1.shp")
 trk_2024_C2 <- st_read("2024-cumbung-meandering-C2.shp")
 trk_2024_Baconian <- st_read("2024_Baconian_line.shp")
 
+# 2025 
+trk_2025 <- st_read(here("../../2026_Cumbung_Marshes_extrapolation/Data/tracklogs/2025-Cumbung-tracklog-clip_c/2025-Cumbung-tracklog-clip_c.shp"))
 ```
 
 Import inundation data.
@@ -123,7 +130,7 @@ Import inundation data.
     -   note these are for a broader cumbung boundary and will need to be clipped to the cumbung ecological boundary
 
 ```{r Import_inun_data}
-setwd("C:/Users/z5204897/OneDrive - UNSW/Desktop/RA/Projects/2024_Cumbung_extrapolation/waterbird_extrapolation_R/data/inundation/")
+setwd(here("data/inundation/"))
 
 inun_2010 <- raster("wi_cumbung_20101203_reclass-400000_clip.tif")
 inun_2011 <- raster("wi_cumbung_20111104_reclass-550000_clip.tif")
@@ -140,6 +147,8 @@ inun_2021 <- raster("Cumbung_inundation_20211022_SEED_clip.tif")
 inun_2022 <- raster("wi_cumbung_20221118_reclass-500000_clip.tif")
 inun_2023 <- raster("wi_cumbung_20231105_reclass-700000_clip.tif")
 inun_2024 <- raster("wi_cumbung_20241030_reclass_-800000_clip.tif")
+
+inun_2025 <- raster(here("../../2026_Cumbung_Marshes_extrapolation/spatial/tiff/cumbung_20251118_reclass_-700000_clip.tif"))
 ```
 
 ## 2. Prepare data
@@ -159,16 +168,22 @@ trk_2010 <- st_transform(trk_2010, 28355)
 trk_2010_AA_C1 <- st_transform(trk_2010_AA_C1, 28355)
 trk_2010_AA_C2 <- st_transform(trk_2010_AA_C2, 28355)
 trk_2011 <- st_transform(trk_2011, 28355)
+trk_2011_blind_C1 <- st_transform(trk_2011_blind_C1, 28355)
+trk_2011_blind_C2 <- st_transform(trk_2011_blind_C2, 28355)
 trk_2012_C1 <- st_transform(trk_2012_C1, 28355)
 trk_2012_C2 <- st_transform(trk_2012_C2, 28355)
 trk_2013 <- st_transform(trk_2013, 28355)
 trk_2014 <- st_transform(trk_2014, 28355)
+trk_2014_blind_C1 <- st_transform(trk_2014_blind_C1, 28355)
+trk_2014_blind_C2 <- st_transform(trk_2014_blind_C2, 28355)
 trk_2015 <- st_transform(trk_2015, 28355)
 trk_2016_transect <- st_transform(trk_2016_transect, 28355)
 trk_20161107_Bac_C1 <- st_transform(trk_20161107_Bac_C1, 28355) 
 trk_20161107_Bac_C2 <- st_transform(trk_20161107_Bac_C2, 28355)
 trk_20161109_mean <- st_transform(trk_20161109_mean, 28355)
 trk_2017 <- st_transform(trk_2017, 28355)
+trk_2017_blind_C1 <- st_transform(trk_2017_blind_C1, 28355)
+trk_2017_blind_C2 <- st_transform(trk_2017_blind_C2, 28355)
 trk_2018 <- st_transform(trk_2018, 28355)
 trk_2019 <- st_transform(trk_2019, 28355)
 trk_2020 <- st_transform(trk_2020, 28355)
@@ -179,6 +194,7 @@ trk_2024_Baconian <- st_transform(trk_2024_Baconian, 28355)
 trk_2024_C1 <- st_transform(trk_2024_C1, 28355)
 trk_2024_C2 <- st_transform(trk_2024_C2, 28355)
 trk_2024_transect <- st_transform(trk_2024_transect, 28355)
+trk_2025 <- st_transform(trk_2025, 28355)
 
 inun_2010 <- projectRaster(inun_2010, crs=28355)
 inun_2011 <- projectRaster(inun_2011, crs=28355)
@@ -195,6 +211,7 @@ inun_2021 <- projectRaster(inun_2021, crs=28355)
 inun_2022 <- projectRaster(inun_2022, crs=28355)
 inun_2023 <- projectRaster(inun_2023, crs=28355)
 inun_2024 <- projectRaster(inun_2024, crs=28355)
+inun_2025 <- projectRaster(inun_2025, crs=28355)
 
 # check coordinate systems are the same
 ggplot() + 
@@ -205,7 +222,10 @@ ggplot() +
 
 ggplot() + 
   geom_sf(data = cumbung_noMarool, color = "red") +
-  geom_sf(data = trk_2011)
+  geom_sf(data = trk_2011) +
+  geom_sf(data = trk_2011_blind_C1, color = "green") +
+  geom_sf(data = trk_2011_blind_C2, color = "blue")
+  
 
 ggplot() + 
   geom_sf(data = cumbung_noMarool, color = "red") +
@@ -218,7 +238,9 @@ ggplot() +
 
 ggplot() + 
   geom_sf(data = cumbung_eco, color = "red") +
-  geom_sf(data = trk_2014)
+  geom_sf(data = trk_2014) +
+  geom_sf(data = trk_2014_blind_C1, color = "green") +
+  geom_sf(data = trk_2014_blind_C2, color = "blue")
 
 ggplot() + 
   geom_sf(data = cumbung_noBac_noM, color = "red") +
@@ -233,7 +255,9 @@ ggplot() +
 
 ggplot() + 
   geom_sf(data = cumbung_noBac, color = "red") +
-  geom_sf(data = trk_2017)
+  geom_sf(data = trk_2017) +
+  geom_sf(data = trk_2017_blind_C1, color = "blue") +
+  geom_sf(data = trk_2011_blind_C2, color = "yellow")
 
 ggplot() + 
   geom_sf(data = cumbung_noBac, color = "red") +
@@ -266,12 +290,18 @@ ggplot() +
   geom_sf(data = trk_2024_C1, color = "blue") +
   geom_sf(data = trk_2024_C2, color = "green") +
   geom_sf(data = trk_2024_transect, color = "yellow") 
+
+ggplot() + 
+  geom_sf(data = cumbung_noBac, color = "red") +
+  geom_sf(data = trk_2025)
 ```
 
--   clip and buffer tracklogs (**This section onwards needs to be updated for all years other than 2024**)
+-   clip and buffer tracklogs
 
     -   for cases where they are merged, separate the tracklogs from different dates and/or counts
+
     -   buffer distance is 100m for transects and 150m for meandering tracklogs
+
     -   merge meandering and transect tracklogs where both types have been measured (for C1 and C2 separately)
 
 ```{r Prepare_tracklog_data}
@@ -292,9 +322,17 @@ trk_2010_C2_all_buff <- bind_rows(trk_2010_AA_C2_buff, trk_2010_buff)
 trk_2011_C1_buff <- trk_2011 %>% 
   subset(Count == 1) %>% 
   st_buffer(dist = 150)
+trk_2011_blind_C1_buff <- trk_2011_blind_C1 %>% 
+  st_buffer(dist = 150)
 trk_2011_C2_buff <- trk_2011 %>% 
   subset(Count == 2) %>% 
   st_buffer(dist = 150)
+trk_2011_blind_C2_buff <- trk_2011_blind_C2 %>% 
+  st_buffer(dist = 150)
+
+# bind all count 1 and count 2 together
+trk_2011_C1_all_buff <- bind_rows(trk_2011_C1_buff, trk_2011_blind_C1_buff)
+trk_2011_C2_all_buff <- bind_rows(trk_2011_C2_buff, trk_2011_blind_C2_buff)
 
 
 # 2012
@@ -318,7 +356,15 @@ trk_2014_C1_buff <- trk_2014 %>%
   st_buffer(dist = 150)
 trk_2014_C2_buff <- trk_2014 %>% 
   subset(Count == 2) %>% 
+  st_buffer(dist = 75) # one observer's data is missing, so half the buffer size
+trk_2014_blind_C1_buff <- trk_2014_blind_C1 %>% 
   st_buffer(dist = 150)
+trk_2014_blind_C2_buff <- trk_2014_blind_C2 %>% 
+  st_buffer(dist = 150)
+
+# bind all count 1 and count 2 together
+trk_2014_C1_all_buff <- bind_rows(trk_2014_C1_buff, trk_2014_blind_C1_buff)
+trk_2014_C2_all_buff <- bind_rows(trk_2014_C2_buff, trk_2014_blind_C2_buff)
 
 # 2015
 trk_2015_main_C1_buff <- trk_2015 %>% 
@@ -371,10 +417,18 @@ trk_2017_main_C1_buff <- trk_2017 %>%
   subset(TransLabel != "Baconian Swamp") %>% 
   subset(Count == 1) %>% 
   st_buffer(dist = 150)
+trk_2017_blind_C1_buff <- trk_2017_blind_C1 %>% 
+  st_buffer(dist = 150)
 trk_2017_main_C2_buff <- trk_2017 %>% 
   subset(TransLabel != "Baconian Swamp") %>% 
   subset(Count == 2) %>% 
   st_buffer(dist = 150)
+trk_2017_blind_C2_buff <- trk_2017_blind_C2 %>% 
+  st_buffer(dist = 150)
+
+# bind all count 1 and count 2 together
+trk_2017_C1_all_buff <- bind_rows(trk_2017_main_C1_buff, trk_2017_blind_C1_buff)
+trk_2017_C2_all_buff <- bind_rows(trk_2017_main_C2_buff, trk_2017_blind_C2_buff)
 
 # 2018
 trk_2018_Bac_buff <- trk_2018 %>%
@@ -402,12 +456,16 @@ trk_2020_Bac_C2_buff <- trk_2020 %>%
   subset(TransLabel == "Baconian Swamp") %>%
   subset(Count == 2) %>% 
   st_buffer(dist = 150)
+trk_2020_Cumbung2_C2_buff <- trk_2020 %>% 
+  subset(TransLabel == "Cumbung 2") %>%
+  subset(Count == 2) %>% 
+  st_buffer(dist = 75) # one observer's data is missing here, so use half transect width than usual
 trk_2020_main_C1_buff <- trk_2020 %>% 
   subset(TransLabel != "Baconian Swamp") %>%
   subset(Count == 1) %>% 
   st_buffer(dist = 150)
 trk_2020_main_C2_buff <- trk_2020 %>% 
-  subset(TransLabel != "Baconian Swamp") %>%
+  subset(TransLabel %in% c("Cumbung E1", "Lachlan L1", "Lower Lachlan 3", "Cumbung 3")) %>%
   subset(Count == 2) %>% 
   st_buffer(dist = 150)
 
@@ -423,7 +481,8 @@ trk_2020_Bac_C2_all_buff <- trk_2020_main_C2_buff %>%
 trk_2020_main_only_C1_buff <- trk_2020_main_C1_buff %>% 
   subset(TransLabel != "Lower Lachlan 3") 
 trk_2020_main_only_C2_buff <- trk_2020_main_C2_buff %>% 
-  subset(TransLabel != "Lower Lachlan 3") 
+  subset(TransLabel != "Lower Lachlan 3") %>% 
+  bind_rows(., trk_2020_Cumbung2_C2_buff)
 
 
 # 2021
@@ -488,6 +547,10 @@ plot(st_geometry(trk_2024_C1t_buff))
 
 trk_2024_C2t_buff <- bind_rows(trk_2024_C2_buff,trk_2024_transect_buff)
 plot(st_geometry(trk_2024_C2t_buff))
+
+# 2025 - all transects
+trk_2025_buff <- trk_2025 %>% 
+  st_buffer(dist = 100)
 ```
 
 Now, try plotting buffered tracklogs on their inundation maps.
@@ -503,8 +566,8 @@ plot(trk_2010_AA_C2_buff, add = TRUE)
 # 2011
 
 plot(inun_2011)
-plot(trk_2011_C1_buff, add = TRUE)
-plot(trk_2011_C2_buff, add = TRUE)
+plot(trk_2011_C1_all_buff, add = TRUE)
+plot(trk_2011_C2_all_buff, add = TRUE)
 
 # 2012
 
@@ -521,8 +584,8 @@ plot(trk_2013_C2_buff, add = TRUE)
 # 2014
 
 plot(inun_2014)
-plot(trk_2014_C1_buff, add = TRUE)
-plot(trk_2014_C2_buff, add = TRUE)
+plot(trk_2014_C1_all_buff, add = TRUE)
+plot(trk_2014_C2_all_buff, add = TRUE)
 
 # 2015
 
@@ -544,8 +607,8 @@ plot(trk_20161107_Bac_C2_buff, add = TRUE)
 # 2017
 
 plot(inun_2017)
-plot(trk_2017_main_C1_buff, add = TRUE)
-plot(trk_2017_main_C2_buff, add = TRUE)
+plot(trk_2017_C1_all_buff, add = TRUE)
+plot(trk_2017_C2_all_buff, add = TRUE)
 plot(trk_2017_Bac_buff, add = TRUE)
 
 # 2018
@@ -595,6 +658,11 @@ plot(trk_2024_C1_buff, add = TRUE)
 plot(trk_2024_C2_buff, add = TRUE)
 plot(trk_2024_Baconian_buff, add = TRUE)
 plot(trk_2024_transect_buff, add = TRUE)
+
+# 2025
+
+plot(inun_2025)
+plot(trk_2025_buff, add = TRUE)
 ```
 
 ## 3. Spatial manipulation and proportion calculation
@@ -611,7 +679,7 @@ Using different boundary files depending on if Baconian swamp and Marool lake ar
 
 -   2013: cumbung_eco
 
--   2014: cumbung_eco
+-   2014: cumbung_noBac (even though no Baconian data, it was decided to include separately and Baconian as a zero count)
 
 -   2015: cumbung_noBac_noM
 
@@ -632,6 +700,8 @@ Using different boundary files depending on if Baconian swamp and Marool lake ar
 -   2023: cumbung_noBac
 
 -   2024: cumbung_noBac_noM
+
+-   2025: cumbung_noBac
 
 For years with transect data, the output needed for input into TDW is an overall area and percentage inundated of the entire Great Cumbung Swamp, and an area and percentage inundated of each buffered tracklog. The names of each tracklog section are stored in the attribute tables of the shapefiles under the field "TransLabel".
 
@@ -723,19 +793,6 @@ AreaPropString10 <- function(name, rasterf, boundary, buffboundary){
   print(c(name, a, p))
 }
 
-# I think this was extra working stuff that can be deleted
-  y <- inun_2020 %>% 
-  crop(extent(cumbung_noBac)) %>% 
-  mask(cumbung_noBac) %>% 
-  mask(trk_2020_main_C1_buff[1,]) # clip the inundation raster to the cumbung boundary
-  plot(y)
-  
-  g <- as.data.frame(freq(y)) %>% subset(value == 1)
-  g$area <- g$count # calculate no. cells inundated within the cumbung boundary
-  
-  a <- round(st_area(trk_2020_main_C1_buff[1,])/10000)
-  
-  p <- round(as.numeric(g$area*30*30/st_area(trk_2020_main_C1_buff[1,]) * 100),2)
 
 
 # 2010
@@ -756,16 +813,18 @@ colnames(Stats2010) <- c('Transect name', 'Area (ha)', 'Proportion inundated (%)
 
 # 2011
 Stats2011 <- matrix(c(AreaPropString("Overall wetland", inun_2011, cumbung_noMarool, cumbung_noMarool),
-                      AreaPropString("Cumbung Swamp Count 1", inun_2011, cumbung_noMarool, trk_2011_C1_buff[5,]),
-                      AreaPropString("Lachlan River Count 1", inun_2011, cumbung_noMarool, trk_2011_C1_buff[4,]),
-                      AreaPropString("Cumbung A6 Count 1", inun_2011, cumbung_noMarool, trk_2011_C1_buff[3,]),
-                      AreaPropString("Cumbung A7 Count 1", inun_2011, cumbung_noMarool, trk_2011_C1_buff[2,]),
-                      AreaPropString("Cumbung A8 Count 1", inun_2011, cumbung_noMarool, trk_2011_C1_buff[1,]),
-                      AreaPropString("Cumbung Swamp Count 2", inun_2011, cumbung_noMarool, trk_2011_C2_buff[5,]),
-                      AreaPropString("Lachlan River Count 2", inun_2011, cumbung_noMarool, trk_2011_C2_buff[4,]),
-                      AreaPropString("Cumbung A6 Count 2", inun_2011, cumbung_noMarool, trk_2011_C2_buff[3,]),
-                      AreaPropString("Cumbung A7 Count 2", inun_2011, cumbung_noMarool, trk_2011_C2_buff[2,]),
-                      AreaPropString("Cumbung A8 Count 2", inun_2011, cumbung_noMarool, trk_2011_C2_buff[1,])),
+                      AreaPropString("Cumbung Swamp Count 1", inun_2011, cumbung_noMarool, trk_2011_C1_all_buff[5,]),
+                      AreaPropString("Lachlan River Count 1", inun_2011, cumbung_noMarool, trk_2011_C1_all_buff[4,]),
+                      AreaPropString("Cumbung A6 Count 1", inun_2011, cumbung_noMarool, trk_2011_C1_all_buff[3,]),
+                      AreaPropString("Cumbung A7 Count 1", inun_2011, cumbung_noMarool, trk_2011_C1_all_buff[2,]),
+                      AreaPropString("Cumbung A8 Count 1", inun_2011, cumbung_noMarool, trk_2011_C1_all_buff[1,]),
+                      AreaPropString("Blindbungi Count 1", inun_2011, cumbung_noMarool, trk_2011_C1_all_buff[6,]),
+                      AreaPropString("Cumbung Swamp Count 2", inun_2011, cumbung_noMarool, trk_2011_C2_all_buff[5,]),
+                      AreaPropString("Lachlan River Count 2", inun_2011, cumbung_noMarool, trk_2011_C2_all_buff[4,]),
+                      AreaPropString("Cumbung A6 Count 2", inun_2011, cumbung_noMarool, trk_2011_C2_all_buff[3,]),
+                      AreaPropString("Cumbung A7 Count 2", inun_2011, cumbung_noMarool, trk_2011_C2_all_buff[2,]),
+                      AreaPropString("Cumbung A8 Count 2", inun_2011, cumbung_noMarool, trk_2011_C2_all_buff[1,]),
+                      AreaPropString("Blindbungi Count 2", inun_2011, cumbung_noMarool, trk_2011_C2_all_buff[6,])),
                ncol = 3, byrow = TRUE)
 colnames(Stats2011) <- c('Transect name', 'Area (ha)', 'Proportion inundated (%)')
 
@@ -796,9 +855,11 @@ colnames(Stats2013) <- c('Transect name', 'Area (ha)', 'Proportion inundated (%)
 
 
 # 2014
-Stats2014 <- matrix(c(AreaPropString("Overall wetland", inun_2014, cumbung_eco, cumbung_eco),
-                      AreaPropString("Cumbung Swamp Count 1", inun_2014, cumbung_eco, trk_2014_C1_buff),
-                      AreaPropString("Cumbung Swamp Count 2", inun_2014, cumbung_eco, trk_2014_C2_buff)),
+Stats2014 <- matrix(c(AreaPropString("Overall wetland", inun_2014, cumbung_noBac, cumbung_eco),
+                      AreaPropString("Cumbung Swamp Count 1", inun_2014, cumbung_noBac, trk_2014_C1_all_buff[1,]),
+                      AreaPropString("Cumbung Swamp Count 2", inun_2014, cumbung_noBac, trk_2014_C2_all_buff[1,]),
+                      AreaPropString("Blindbungi Count 1", inun_2014, cumbung_noBac, trk_2014_C1_all_buff[2,]),
+                      AreaPropString("Blindbungi Count 2", inun_2014, cumbung_noBac, trk_2014_C2_all_buff[2,])),
                ncol = 3, byrow = TRUE)
 colnames(Stats2014) <- c('Transect name', 'Area (ha)', 'Proportion inundated (%)')
 
@@ -812,10 +873,10 @@ Stats2015 <- matrix(c(AreaPropString("Overall wetland", inun_2015, cumbung_noBac
                       AreaPropString("Cumbung Swamp Count 1", inun_2015, cumbung_noBac_noM, trk_2015_main_C1_buff[2,]),
                       AreaPropString("Cumbung B Count 1", inun_2015, cumbung_noBac_noM, trk_2015_main_C1_buff[3,]),
                       AreaPropString("Cumbung AA Count 1", inun_2015, cumbung_noBac_noM, trk_2015_main_C1_buff[4,]),
-                      AreaPropString("Cumbung S Count 2", inun_2015, cumbung_noBac_noM, trk_2015_main_C1_buff[1,]),
-                      AreaPropString("Cumbung Swamp Count 2", inun_2015, cumbung_noBac_noM, trk_2015_main_C1_buff[3,]),
-                      AreaPropString("Cumbung B Count 2", inun_2015, cumbung_noBac_noM, trk_2015_main_C1_buff[4,]),
-                      AreaPropString("Cumbung AA Count 2", inun_2015, cumbung_noBac_noM, trk_2015_main_C1_buff[2,])),
+                      AreaPropString("Cumbung S Count 2", inun_2015, cumbung_noBac_noM, trk_2015_main_C2_buff[1,]),
+                      AreaPropString("Cumbung Swamp Count 2", inun_2015, cumbung_noBac_noM, trk_2015_main_C2_buff[3,]),
+                      AreaPropString("Cumbung B Count 2", inun_2015, cumbung_noBac_noM, trk_2015_main_C2_buff[4,]),
+                      AreaPropString("Cumbung AA Count 2", inun_2015, cumbung_noBac_noM, trk_2015_main_C2_buff[2,])),
                ncol = 3, byrow = TRUE)
 colnames(Stats2015) <- c('Transect name', 'Area (ha)', 'Proportion inundated (%)')
 
@@ -847,11 +908,13 @@ colnames(Stats2016) <- c('Transect name', 'Area (ha)', 'Proportion inundated (%)
 Stats2017 <- matrix(c(AreaPropString("Overall wetland", inun_2017, cumbung_noBac, cumbung_noBac),
                       AreaPropString("Baconian Swamp overall", inun_2017, Baconian, Baconian),
                       AreaPropString("Baconian Swamp", inun_2017, Baconian, trk_2017_Bac_buff),
-                      AreaPropString("Cumbung 1 Count 1", inun_2017, cumbung_noBac, trk_2017_main_C1_buff[1,]),
-                      AreaPropString("Lignum Lake (not) Count 1", inun_2017, cumbung_noBac, trk_2017_main_C1_buff[2,]),
-                      AreaPropString("Cumbung 3 Count 1", inun_2017, cumbung_noBac, trk_2017_main_C1_buff[3,]),
-                      AreaPropString("Cumbung 1 Count 2", inun_2017, cumbung_noBac, trk_2017_main_C2_buff[1,]),
-                      AreaPropString("Cumbung 3 Count 2", inun_2017, cumbung_noBac, trk_2017_main_C2_buff[2,])),
+                      AreaPropString("Cumbung 1 Count 1", inun_2017, cumbung_noBac, trk_2017_C1_all_buff[1,]),
+                      AreaPropString("Lignum Lake (not) Count 1", inun_2017, cumbung_noBac, trk_2017_C1_all_buff[2,]),
+                      AreaPropString("Cumbung 3 Count 1", inun_2017, cumbung_noBac, trk_2017_C1_all_buff[3,]),
+                      AreaPropString("Blindbungi Count 1", inun_2017, cumbung_noBac, trk_2017_C1_all_buff[4,]),
+                      AreaPropString("Cumbung 1 Count 2", inun_2017, cumbung_noBac, trk_2017_C2_all_buff[1,]),
+                      AreaPropString("Cumbung 3 Count 2", inun_2017, cumbung_noBac, trk_2017_C2_all_buff[2,]),
+                      AreaPropString("Blindbungi Count 2", inun_2017, cumbung_noBac, trk_2017_C2_all_buff[3,])),
                ncol = 3, byrow = TRUE)
 colnames(Stats2017) <- c('Transect name', 'Area (ha)', 'Proportion inundated (%)')
 
@@ -883,18 +946,18 @@ colnames(Stats2019) <- c('Transect name', 'Area (ha)', 'Proportion inundated (%)
 # Lower Lachlan 3 is in Baconian so therefore its proportion relates to Baconian
 Stats2020 <- matrix(c(AreaPropString10("Overall wetland", inun_2020, cumbung_noBac, cumbung_noBac),
                       AreaPropString10("Baconian Swamp overall", inun_2020, Baconian, Baconian),
-                      AreaPropString10("Baconian Swamp Count 1", inun_2020, Baconian, trk_2020_Bac_C1_buff),
-                      AreaPropString10("Baconian Swamp Count 2", inun_2020, Baconian, trk_2020_Bac_C2_buff),
-                      AreaPropString10("Cumbung E1 Count 1", inun_2020, cumbung_noBac, trk_2020_main_C1_buff[1,]),
-                      AreaPropString10("Lower Lachlan 3 Count 1", inun_2020, Baconian, trk_2020_main_C1_buff[2,]),
-                      AreaPropString10("Cumbung 2 Count 1", inun_2020, cumbung_noBac, trk_2020_main_C1_buff[3,]),
-                      AreaPropString10("Lachlan L1 Count 1", inun_2020, cumbung_noBac, trk_2020_main_C1_buff[4,]),
-                      AreaPropString10("Cumbung 3 Count 1", inun_2020, cumbung_noBac, trk_2020_main_C1_buff[5,]),
-                      AreaPropString10("Cumbung E1 Count 2", inun_2020, cumbung_noBac, trk_2020_main_C2_buff[1,]),
-                      AreaPropString10("Lower Lachlan 3 Count 2", inun_2020, Baconian, trk_2020_main_C2_buff[3,]),
-                      AreaPropString10("Cumbung 2 Count 2", inun_2020, cumbung_noBac, trk_2020_main_C2_buff[5,]),
-                      AreaPropString10("Lachlan L1 Count 2", inun_2020, cumbung_noBac, trk_2020_main_C2_buff[2,]),
-                      AreaPropString10("Cumbung 3 Count 2", inun_2020, cumbung_noBac, trk_2020_main_C2_buff[4,])),
+                      AreaPropString10("Baconian Swamp Count 1", inun_2020, Baconian, trk_2020_Bac_C1_all_buff[2,]),
+                      AreaPropString10("Baconian Swamp Count 2", inun_2020, Baconian, trk_2020_Bac_C2_all_buff[2,]),
+                      AreaPropString10("Lower Lachlan 3 Count 1", inun_2020, Baconian, trk_2020_Bac_C1_all_buff[1,]),
+                       AreaPropString10("Lower Lachlan 3 Count 2", inun_2020, Baconian, trk_2020_Bac_C2_all_buff[1,]),
+                      AreaPropString10("Cumbung E1 Count 1", inun_2020, cumbung_noBac, trk_2020_main_only_C1_buff[1,]),
+                      AreaPropString10("Cumbung 2 Count 1", inun_2020, cumbung_noBac, trk_2020_main_only_C1_buff[2,]),
+                      AreaPropString10("Lachlan L1 Count 1", inun_2020, cumbung_noBac, trk_2020_main_only_C1_buff[3,]),
+                      AreaPropString10("Cumbung 3 Count 1", inun_2020, cumbung_noBac, trk_2020_main_only_C1_buff[4,]),
+                      AreaPropString10("Cumbung E1 Count 2", inun_2020, cumbung_noBac, trk_2020_main_only_C2_buff[1,]),
+                      AreaPropString10("Cumbung 2 Count 2", inun_2020, cumbung_noBac, trk_2020_main_only_C2_buff[4,]),
+                      AreaPropString10("Lachlan L1 Count 2", inun_2020, cumbung_noBac, trk_2020_main_only_C2_buff[2,]),
+                      AreaPropString10("Cumbung 3 Count 2", inun_2020, cumbung_noBac, trk_2020_main_only_C2_buff[3,])),
                ncol = 3, byrow = TRUE)
 colnames(Stats2020) <- c('Transect name', 'Area (ha)', 'Proportion inundated (%)')
 
@@ -974,6 +1037,17 @@ Stats2024 <- matrix(c(AreaPropString("Overall wetland", inun_2024,cumbung_noBac_
 
 colnames(Stats2024) <- c('Transect name', 'Area (ha)', 'Proportion inundated (%)')
 
+
+# 2025
+Stats2025 <- matrix(c(AreaPropString("Overall wetland", inun_2025, cumbung_noBac, cumbung_noBac),
+                      AreaPropString("Transect 1", inun_2025, cumbung_noBac, trk_2025_buff[6,]),
+                      AreaPropString("Transect 2", inun_2025, cumbung_noBac, trk_2025_buff[1,]),
+                      AreaPropString("Transect 3", inun_2025, cumbung_noBac, trk_2025_buff[2,]),
+                      AreaPropString("Transect 4", inun_2025, cumbung_noBac, trk_2025_buff[3,]),
+                      AreaPropString("Transect 5", inun_2025, cumbung_noBac, trk_2025_buff[4,]),
+                      AreaPropString("Transect 6", inun_2025, cumbung_noBac, trk_2025_buff[5,])),
+               ncol = 3, byrow = TRUE)
+colnames(Stats2025) <- c('Transect name', 'Area (ha)', 'Proportion inundated (%)')
 ```
 
 The following chunk calculates the overall percentage of inundated area in the total wetland that was surveyed in all tracklogs together. This is the input in TDW for years without transect data and should be used as a quality check in years with transect data.
@@ -1009,8 +1083,8 @@ Prop2010C1 <- inun_prop_surveyed("2010", "Cumbung Swamp", "1", inun_2010, trk_20
 Prop2010C2 <- inun_prop_surveyed("2010", "Cumbung Swamp", "2", inun_2010, trk_2010_C2_all_buff, cumbung_eco)
 
 # 2011
-Prop2011C1 <- inun_prop_surveyed("2011", "Cumbung Swamp", "1", inun_2011, trk_2011_C1_buff, cumbung_noMarool)
-Prop2011C2 <- inun_prop_surveyed("2011", "Cumbung Swamp", "2", inun_2011, trk_2011_C2_buff, cumbung_noMarool)
+Prop2011C1 <- inun_prop_surveyed("2011", "Cumbung Swamp", "1", inun_2011, trk_2011_C1_all_buff, cumbung_noMarool)
+Prop2011C2 <- inun_prop_surveyed("2011", "Cumbung Swamp", "2", inun_2011, trk_2011_C2_all_buff, cumbung_noMarool)
 
 # 2012
 Prop2012C1 <- inun_prop_surveyed("2012", "Cumbung Swamp", "1", inun_2012, trk_2012_C1_buff, cumbung_noMarool)
@@ -1021,8 +1095,8 @@ Prop2013C1 <- inun_prop_surveyed("2013", "Cumbung Swamp", "1", inun_2013, trk_20
 Prop2013C2 <- inun_prop_surveyed("2013", "Cumbung Swamp", "2", inun_2013, trk_2013_C2_buff, cumbung_eco)
 
 # 2014
-Prop2014C1 <- inun_prop_surveyed("2014", "Cumbung Swamp", "1", inun_2014, trk_2014_C1_buff, cumbung_eco)
-Prop2014C2 <- inun_prop_surveyed("2014", "Cumbung Swamp", "2", inun_2014, trk_2014_C2_buff, cumbung_eco)
+Prop2014C1 <- inun_prop_surveyed("2014", "Cumbung Swamp", "1", inun_2014, trk_2014_C1_all_buff, cumbung_noBac)
+Prop2014C2 <- inun_prop_surveyed("2014", "Cumbung Swamp", "2", inun_2014, trk_2014_C2_all_buff, cumbung_noBac)
 
 
 # 2015
@@ -1039,8 +1113,8 @@ Prop20161107BacC2 <- inun_prop_surveyed("2016, on 7 November", "Baconian Swamp",
 
 # 2017
 Prop2017Bac <- inun_prop_surveyed("2017", "Baconian Swamp", "1", inun_2017, trk_2017_Bac_buff, Baconian)
-Prop2017C1 <- inun_prop_surveyed("2017", "Cumbung Swamp", "1", inun_2017, trk_2017_main_C1_buff, cumbung_noBac)
-Prop2017C2 <- inun_prop_surveyed("2017", "Cumbung Swamp", "2", inun_2017, trk_2017_main_C2_buff, cumbung_noBac)
+Prop2017C1 <- inun_prop_surveyed("2017", "Cumbung Swamp", "1", inun_2017, trk_2017_C1_all_buff, cumbung_noBac)
+Prop2017C2 <- inun_prop_surveyed("2017", "Cumbung Swamp", "2", inun_2017, trk_2017_C2_all_buff, cumbung_noBac)
 
 # 2018
 Prop2018Bac <- inun_prop_surveyed("2018", "Baconian Swamp", "1", inun_2018, trk_2018_Bac_buff, Baconian)
@@ -1073,13 +1147,666 @@ Prop2023C1 <- inun_prop_surveyed("2023", "Cumbung Swamp", "2", inun_2023, trk_20
 Prop2024Bac <- inun_prop_surveyed("2024", "Baconian Swamp", "1", inun_2024,  trk_2024_Baconian_buff, Baconian)
 Prop_2024C1 <- inun_prop_surveyed("2024", "Cumbung Swamp", "1", inun_2024, trk_2024_C1t_buff, cumbung_noBac_noM)
 Prop_2024C2 <- inun_prop_surveyed("2024", "Cumbung Swamp", "2", inun_2024, trk_2024_C2t_buff, cumbung_noBac_noM)
+
+# 2025
+Prop2025 <- inun_prop_surveyed("2025", "Cumbung Swamp", "1", inun_2025, trk_2025_buff, cumbung_noBac)
 ```
 
-## 4. Waterbird calculations
+## 4. Overlap areas
+
+**Calculate overlapped tracklog buffer areas**
+
+In some years, buffered tracklogs overlap with one another (2010, 2017, 2018, 2019). To avoid double counting these areas in The Duck Web, we need to calculate the area that is overlapped in each case and subtract half from each buffered tracklog area.
+
+-   In 2010, track 4 & 5 overlap one another (lines 7 & 4 in trk_2010_buff)
+-   In 2016:
+    -   track 6 and 7 overlap (lines 9 & 10 in trk_20161109_C1_all)
+    -   cumbung 3A overlaps with track 9 and track 8 (lines 2, 3 and 11)
+-   In 2017, Cumbung 3 and Lignum Lake Not overlap (lines 3 and 2 in trk_2017_C1_all)
+-   In 2018, GCS and GCS2 overlap (lines 1 and 2 in trk_2018_main_C1_buff)
+-   In 2019, Cumbung 3 and GCS overlap (lines 2 and 3 in trk_2019_buff)
+-   In 2020, Cumbung E1 and Cumbung 3 overlap (lines 1 and 5 in trk_2020_main_C1_buff)
+
+Calculate the area of each overlapping buffered tracklog individually, and then their total area, to determine the area of the overlap.
+
+```{r Overlapping_tracklogs_2010}
+#2010
+
+# first, visualise transects
+plot(inun_2010)
+plot(trk_2010_buff, add = TRUE)
+plot(trk_2010_AA_C1_buff, add = TRUE)
+#plot(trk_2010_AA_C2_buff, add = TRUE)
+
+# prepare by creating a summary of inundated and non inundated areas in the overlap
+trk_2010_buff_T4_5_inun <- inun_2010 %>% 
+  crop(extent(trk_2010_buff[c(4,7),])) %>% 
+  mask(trk_2010_buff[c(4,7),])
+
+area_2010_T4_5 <- as.data.frame(freq(trk_2010_buff_T4_5_inun)) 
+area_2010_T4_5_inun <- area_2010_T4_5 %>% subset(value == 1)
+area_2010_T4_5_noninun <- area_2010_T4_5 %>% subset(value == 0)
+
+# overlapped area = track 4 area + track 5 area - track4&5 area
+plot(trk_2010_buff_T4_5_inun)
+
+overlaparea2010 <- as.numeric(st_area(trk_2010_buff[7,])/10000) + 
+  as.numeric(st_area(trk_2010_buff[4,])/10000) - 
+  (area_2010_T4_5_inun$count + area_2010_T4_5_noninun$count)*30*30/10000 # account for cell size
+
+# overlapped inundation area (IA) = track 4 IA + track 5 IA = track4&5 IA
+track4buff <- inun_2010 %>% 
+  crop(extent(trk_2010_buff[7,])) %>% 
+  mask(trk_2010_buff[7,])
+track5buff <- inun_2010 %>% 
+  crop(extent(trk_2010_buff[4,])) %>% 
+  mask(trk_2010_buff[4,])
+
+plot(track4buff)
+plot(track5buff)
+
+area_2010_T4_inun <- as.data.frame(freq(track4buff)) %>% 
+  subset(value == 1)
+area_2010_T5_inun <- as.data.frame(freq(track5buff)) %>% 
+  subset(value == 1)
+
+overlapinun2010 <- (area_2010_T4_inun$count + 
+    area_2010_T5_inun$count - 
+    area_2010_T4_5_inun$count)*30*30/10000
+
+# revised track 4 and 5 areas
+track4area <- as.numeric((st_area(trk_2010_buff[7,])/10000)) - 0.5*overlaparea2010 # track 4
+round(track4area)
+track5area <- as.numeric((st_area(trk_2010_buff[4,])/10000)) - 0.5*overlaparea2010 # track 5
+round(track5area)
+
+# revised track 4 and 5 inundated areas
+track4inun <- area_2010_T4_inun$count*30*30/10000 - 0.5*overlapinun2010 # track 4
+track5inun <- area_2010_T5_inun$count*30*30/10000 - 0.5*overlapinun2010 # track 5
+ 
+# revised track 4 and 5 inundated proportions
+track4prop <- track4inun/track4area*100
+track4prop
+track5prop <- track5inun/track5area*100
+track5prop
+
+
+
+
+# check other years
+plot(inun_2011)
+plot(trk_2011_C1_all_buff, add = TRUE)
+plot(trk_2011_blind_C1_buff, add = TRUE)
+
+plot(inun_2012)
+plot(trk_2012_C1_buff, add = TRUE)
+
+plot(inun_2013)
+plot(trk_2013_C1_buff, add = TRUE)
+
+plot(inun_2014)
+plot(trk_2014_C1_all_buff, add = TRUE)
+plot(trk_2014_blind_C1_buff, add = TRUE)
+
+plot(inun_2015)
+plot(trk_2015_main_C1_buff, add = TRUE)
+plot(trk_2015_Bac_C1_buff, add = TRUE)
+
+plot(inun_2016)
+plot(trk_2016_transect_buff, add = TRUE)
+plot(trk_20161107_Bac_C1_buff, add = TRUE)
+plot(trk_20161109_C1_buff, add = TRUE)
+
+plot(inun_2017)
+plot(trk_2017_C1_all_buff, add = TRUE)
+plot(trk_2017_Bac_buff, add = TRUE)
+plot(trk_2017_blind_C1_buff, add = TRUE)
+
+plot(inun_2018)
+plot(trk_2018_main_C1_buff, add = TRUE)
+plot(trk_2018_Bac_buff, add = TRUE)
+
+plot(inun_2019)
+plot(trk_2019_buff, add = TRUE)
+
+plot(inun_2020)
+plot(trk_2020_main_C1_buff, add = TRUE)
+plot(trk_2020_Bac_C1_all_buff, add = TRUE)
+
+plot(inun_2021)
+plot(trk_2021_main_C1_buff, add = TRUE)
+plot(trk_2021_Bac_buff, add = TRUE)
+
+plot(inun_2022)
+plot(trk_2022_buff, add = TRUE)
+
+plot(inun_2023)
+plot(trk_2023_C1buff_all, add = TRUE)
+plot(trk_2023_Bac_buff, add = TRUE)
+
+plot(inun_2024)
+plot(trk_2024_C1_buff, add = TRUE)
+plot(trk_2024_C1t_buff, add = TRUE)
+plot(trk_2024_Baconian_buff, add = TRUE)
+
+```
+
+```{r Overlap_areas_2016}
+
+# 2016 - track 6 & 7 overlap
+
+# prepare by creating a summary of inundated and non inundated areas in the overlap
+trk_2016_buff_T6_7_inun <- inun_2016 %>% 
+  crop(extent(trk_20161109_C1_all[c(9,10),])) %>% 
+  mask(trk_20161109_C1_all[c(9,10),])
+
+area_2016_T6_7 <- as.data.frame(freq(trk_2016_buff_T6_7_inun)) 
+area_2016_T6_7_inun <- area_2016_T6_7 %>% subset(value == 1)
+area_2016_T6_7_noninun <- area_2016_T6_7 %>% subset(value == 0)
+
+# overlapped area = track 6 area + track 7 area - track6&7 area
+plot(trk_2016_buff_T6_7_inun)
+
+overlaparea2016_T6_7 <- as.numeric(st_area(trk_20161109_C1_all[9,])/10000) + 
+  as.numeric(st_area(trk_20161109_C1_all[10,])/10000) - 
+  (area_2016_T6_7_inun$count + area_2016_T6_7_noninun$count)*30*30/10000 # account for cell size
+
+# overlapped inundation area (IA) = track 6 IA + track 7 IA = track6&7 IA
+track6buff <- inun_2016 %>% 
+  crop(extent(trk_20161109_C1_all[9,])) %>% 
+  mask(trk_20161109_C1_all[9,])
+track7buff <- inun_2016 %>% 
+  crop(extent(trk_20161109_C1_all[10,])) %>% 
+  mask(trk_20161109_C1_all[10,])
+
+plot(track6buff)
+plot(track7buff)
+
+area_2016_T6_inun <- as.data.frame(freq(track6buff)) %>% 
+  subset(value == 1)
+area_2016_T7_inun <- as.data.frame(freq(track7buff)) %>% 
+  subset(value == 1)
+
+overlapinun2016 <- (area_2016_T6_inun$count + 
+    area_2016_T7_inun$count - 
+    area_2016_T6_7_inun$count)*30*30/10000
+
+# revised track 6 and 7 areas
+track6area <- as.numeric((st_area(trk_20161109_C1_all[9,])/10000)) - 0.5*overlaparea2016_T6_7 # track 6
+round(track6area)
+track7area <- as.numeric((st_area(trk_20161109_C1_all[10,])/10000)) - 0.5*overlaparea2016_T6_7 # track 7
+round(track7area)
+
+# revised track 6 and 7 inundated areas
+track6inun <- area_2016_T6_inun$count*30*30/10000 - 0.5*overlapinun2016 # track 6
+track7inun <- area_2016_T7_inun$count*30*30/10000 - 0.5*overlapinun2016 # track 7
+ 
+# revised track 6 and 7 inundated proportions
+track6prop <- track6inun/track6area*100
+track6prop
+track7prop <- track7inun/track7area*100
+track7prop
+
+
+
+
+
+# 2016 - 3a & track 8 and track 9
+
+# prepare by creating a summary of inundated and non inundated areas in the overlaps
+trk_2016_buff_T8_3A_inun <- inun_2016 %>% 
+  crop(extent(trk_20161109_C1_all[c(2,3),])) %>% 
+  mask(trk_20161109_C1_all[c(2,3),])
+
+area_2016_T8_3A <- as.data.frame(freq(trk_2016_buff_T8_3A_inun)) 
+area_2016_T8_3A_inun <- area_2016_T8_3A %>% subset(value == 1)
+area_2016_T8_3A_noninun <- area_2016_T8_3A %>% subset(value == 0)
+
+trk_2016_buff_T9_3A_inun <- inun_2016 %>% 
+  crop(extent(trk_20161109_C1_all[c(2,11),])) %>% 
+  mask(trk_20161109_C1_all[c(2,11),])
+
+area_2016_T9_3A <- as.data.frame(freq(trk_2016_buff_T9_3A_inun)) 
+area_2016_T9_3A_inun <- area_2016_T9_3A %>% subset(value == 1)
+area_2016_T9_3A_noninun <- area_2016_T9_3A %>% subset(value == 0)
+
+# overlapped area 1 = 3A area + track 8 area - track3A&8 area
+plot(trk_2016_buff_T8_3A_inun)
+
+overlaparea2016_T8_3A <- as.numeric(st_area(trk_20161109_C1_all[2,])/10000) + 
+  as.numeric(st_area(trk_20161109_C1_all[3,])/10000) - 
+  (area_2016_T8_3A_inun$count + area_2016_T8_3A_noninun$count)*30*30/10000 # account for cell size
+
+# overlapped area 2 = 3A area + track 9 area - track3A&9 area
+plot(trk_2016_buff_T9_3A_inun)
+
+overlaparea2016_T9_3A <- as.numeric(st_area(trk_20161109_C1_all[2,])/10000) + 
+  as.numeric(st_area(trk_20161109_C1_all[11,])/10000) - 
+  (area_2016_T9_3A_inun$count + area_2016_T8_3A_noninun$count)*30*30/10000 # account for cell size
+
+
+# overlapped inundation area (IA) 1 = 3A IA + track 8 IA = track3A&8 IA
+track3Abuff <- inun_2016 %>% 
+  crop(extent(trk_20161109_C1_all[2,])) %>% 
+  mask(trk_20161109_C1_all[2,])
+track8buff <- inun_2016 %>% 
+  crop(extent(trk_20161109_C1_all[3,])) %>% 
+  mask(trk_20161109_C1_all[3,])
+
+plot(track3Abuff)
+plot(track8buff)
+
+area_2016_3A_inun <- as.data.frame(freq(track3Abuff)) %>% 
+  subset(value == 1)
+area_2016_T8_inun <- as.data.frame(freq(track8buff)) %>% 
+  subset(value == 1)
+
+overlapinun2016_3A_T8 <- (area_2016_3A_inun$count + 
+    area_2016_T8_inun$count - 
+    area_2016_T8_3A_inun$count)*30*30/10000
+
+##
+track9buff <- inun_2016 %>% 
+  crop(extent(trk_20161109_C1_all[11,])) %>% 
+  mask(trk_20161109_C1_all[11,])
+
+plot(track9buff)
+
+area_2016_T9_inun <- as.data.frame(freq(track9buff)) %>% 
+  subset(value == 1)
+
+overlapinun2016_3A_T9 <- (area_2016_3A_inun$count + 
+    area_2016_T9_inun$count - 
+    area_2016_T9_3A_inun$count)*30*30/10000
+
+
+# revised 3A, track 8 and 9 areas
+track3Aarea <- as.numeric((st_area(trk_20161109_C1_all[2,])/10000)) - 0.5*overlaparea2016_T8_3A - 0.5*overlaparea2016_T9_3A # 3A
+round(track3Aarea)
+track8area <- as.numeric((st_area(trk_20161109_C1_all[3,])/10000)) - 0.5*overlaparea2016_T8_3A # track 8
+round(track8area)
+track9area <- as.numeric((st_area(trk_20161109_C1_all[11,])/10000)) - 0.5*overlaparea2016_T9_3A # track 9
+round(track9area)
+
+# revised 3A, track 8 and 9inundated areas
+track3Ainun <- area_2016_3A_inun$count*30*30/10000 - 0.5*overlapinun2016_3A_T8 - 0.5*overlapinun2016_3A_T9 # track 3A
+track8inun <- area_2016_T8_inun$count*30*30/10000 - 0.5*overlapinun2016_3A_T8 # track 8
+track9inun <- area_2016_T9_inun$count*30*30/10000 - 0.5*overlapinun2016_3A_T9 # track 9
+ 
+# revised 3A, track 8 and 9inundated proportions
+track3Aprop <- track3Ainun/track3Aarea*100
+track3Aprop
+track8prop <- track8inun/track8area*100
+track8prop
+track9prop <- track9inun/track9area*100
+track9prop
+
+```
+
+```{r Overlap_areas_2017}
+# first, visualise transects
+plot(inun_2017)
+plot(trk_2017_C1_all_buff, add = TRUE)
+plot(trk_2017_Bac_buff, add = TRUE)
+
+# prepare by creating a summary of inundated and non inundated areas in the overlap
+trk_2017_buff_C3_LL_inun <- inun_2017 %>% 
+  crop(extent(trk_2017_C1_all_buff[c(3,2),])) %>% 
+  mask(trk_2017_C1_all_buff[c(3,2),])
+
+area_2017_C3_LL <- as.data.frame(freq(trk_2017_buff_C3_LL_inun)) 
+area_2017_C3_LL_inun <- area_2017_C3_LL %>% subset(value == 1)
+area_2017_C3_LL_noninun <- area_2017_C3_LL %>% subset(value == 0)
+
+# overlapped area = C3 area + LL area - trackC3&LL area
+plot(trk_2017_buff_C3_LL_inun)
+
+overlaparea2017 <- as.numeric(st_area(trk_2017_C1_all_buff[3,])/10000) + 
+  as.numeric(st_area(trk_2017_C1_all_buff[2,])/10000) - 
+  (area_2017_C3_LL_inun$count + area_2017_C3_LL_noninun$count)*30*30/10000 # account for cell size
+
+# overlapped inundation area (IA) = track C3 IA + track LL IA = trackC3&LL IA
+trackC3buff <- inun_2017 %>% 
+  crop(extent(trk_2017_C1_all_buff[3,])) %>% 
+  mask(trk_2017_C1_all_buff[3,])
+trackLLbuff <- inun_2017 %>% 
+  crop(extent(trk_2017_C1_all_buff[2,])) %>% 
+  mask(trk_2017_C1_all_buff[2,])
+
+plot(trackC3buff)
+plot(trackLLbuff)
+
+area_2017_C3_inun <- as.data.frame(freq(trackC3buff)) %>% 
+  subset(value == 1)
+area_2017_LL_inun <- as.data.frame(freq(trackLLbuff)) %>% 
+  subset(value == 1)
+
+overlapinun2017 <- (area_2017_LL_inun$count + 
+    area_2017_C3_inun$count - 
+    area_2017_C3_LL_inun$count)*30*30/10000
+
+# revised C3 and LL areas
+trackC3area <- as.numeric((st_area(trk_2017_C1_all_buff[3,])/10000)) - 0.5*overlaparea2017 #  Cumbung 3
+round(trackC3area)
+trackLLarea <- as.numeric((st_area(trk_2017_C1_all_buff[2,])/10000)) - 0.5*overlaparea2017 # Lignum Lake Not
+round(trackLLarea)
+
+# revised C3 and LL inundated areas
+trackC3inun <- area_2017_C3_inun$count*30*30/10000 - 0.5*overlapinun2017 # track 4
+trackLLinun <- area_2017_LL_inun$count*30*30/10000 - 0.5*overlapinun2017 # track 5
+ 
+# revised C3 and LL inundated proportions
+trackC3prop <- trackC3inun/trackC3area*100
+trackC3prop
+trackLLprop <- trackLLinun/trackLLarea*100
+trackLLprop
+
+```
+
+\
+
+```{r Overlap_areas_2018}
+# first, visualise transects
+plot(inun_2018)
+plot(trk_2018_main_C1_buff, add = TRUE)
+plot(trk_2018_Bac_buff, add = TRUE)
+
+# prepare by creating a summary of inundated and non inundated areas in the overlap
+trk_2018_buff_GCS_GCS2_inun <- inun_2018 %>% 
+  crop(extent(trk_2018_main_C1_buff[c(1,2),])) %>% 
+  mask(trk_2018_main_C1_buff[c(1,2),])
+
+area_2018_GCS_GCS2 <- as.data.frame(freq(trk_2018_buff_GCS_GCS2_inun)) 
+area_2018_GCS_GCS2_inun <- area_2018_GCS_GCS2 %>% subset(value == 1)
+area_2018_GCS_GCS2_noninun <- area_2018_GCS_GCS2 %>% subset(value == 0)
+
+# overlapped area = GCS area + GCS2 area - GCS&GCS2 area
+plot(trk_2018_buff_GCS_GCS2_inun)
+
+overlaparea2018 <- as.numeric(st_area(trk_2018_main_C1_buff[1,])/10000) + 
+  as.numeric(st_area(trk_2018_main_C1_buff[2,])/10000) - 
+  (area_2018_GCS_GCS2_inun$count + area_2018_GCS_GCS2_noninun$count)*30*30/10000 # account for cell size
+
+# overlapped inundation area (IA) = GCS IA + GCS2 IA - GCS&GCS2 IA
+GCSbuff <- inun_2018 %>% 
+  crop(extent(trk_2018_main_C1_buff[1,])) %>% 
+  mask(trk_2018_main_C1_buff[1,])
+GCS2buff <- inun_2018 %>% 
+  crop(extent(trk_2018_main_C1_buff[2,])) %>% 
+  mask(trk_2018_main_C1_buff[2,])
+
+plot(GCSbuff)
+plot(GCS2buff)
+
+area_2018_GCS_inun <- as.data.frame(freq(GCSbuff)) %>% 
+  subset(value == 1)
+area_2018_GCS2_inun <- as.data.frame(freq(GCS2buff)) %>% 
+  subset(value == 1)
+
+overlapinun2018 <- (area_2018_GCS_inun$count + 
+    area_2018_GCS2_inun$count - 
+    area_2018_GCS_GCS2_inun$count)*30*30/10000
+
+# revised GCS and GCS2 areas
+GCSarea <- as.numeric((st_area(trk_2018_main_C1_buff[1,])/10000)) - 0.5*overlaparea2018 # GCS
+round(GCSarea)
+GCS2area <- as.numeric((st_area(trk_2018_main_C1_buff[2,])/10000)) - 0.5*overlaparea2018 # GCS2
+round(GCS2area)
+
+# revised GCS and GCS2  inundated areas
+GCSinun <- area_2018_GCS_inun$count*30*30/10000 - 0.5*overlapinun2018 # track 4
+GCS2inun <- area_2018_GCS2_inun$count*30*30/10000 - 0.5*overlapinun2018 # track 5
+ 
+# revised GCS and GCS2  inundated proportions
+GCSprop <- GCSinun/GCSarea*100
+GCSprop
+GCS2prop <- GCS2inun/GCS2area*100
+GCS2prop
+
+
+## Count 2
+
+# first, visualise transects
+plot(inun_2018)
+plot(trk_2018_main_C2_buff, add = TRUE)
+plot(trk_2018_Bac_buff, add = TRUE)
+
+# prepare by creating a summary of inundated and non inundated areas in the overlap
+trk_2018_buff_GCS_GCS2_inun <- inun_2018 %>% 
+  crop(extent(trk_2018_main_C2_buff[c(1,3),])) %>% 
+  mask(trk_2018_main_C2_buff[c(1,3),])
+
+area_2018_GCS_GCS2 <- as.data.frame(freq(trk_2018_buff_GCS_GCS2_inun)) 
+area_2018_GCS_GCS2_inun <- area_2018_GCS_GCS2 %>% subset(value == 1)
+area_2018_GCS_GCS2_noninun <- area_2018_GCS_GCS2 %>% subset(value == 0)
+
+# overlapped area = GCS area + GCS2 area - GCS&GCS2 area
+plot(trk_2018_buff_GCS_GCS2_inun)
+
+overlaparea2018 <- as.numeric(st_area(trk_2018_main_C2_buff[1,])/10000) + 
+  as.numeric(st_area(trk_2018_main_C2_buff[3,])/10000) - 
+  (area_2018_GCS_GCS2_inun$count + area_2018_GCS_GCS2_noninun$count)*30*30/10000 # account for cell size
+
+# overlapped inundation area (IA) = GCS IA + GCS2 IA - GCS&GCS2 IA
+GCSbuff <- inun_2018 %>% 
+  crop(extent(trk_2018_main_C2_buff[1,])) %>% 
+  mask(trk_2018_main_C2_buff[1,])
+GCS2buff <- inun_2018 %>% 
+  crop(extent(trk_2018_main_C2_buff[3,])) %>% 
+  mask(trk_2018_main_C2_buff[3,])
+
+plot(GCSbuff)
+plot(GCS2buff)
+
+area_2018_GCS_inun <- as.data.frame(freq(GCSbuff)) %>% 
+  subset(value == 1)
+area_2018_GCS2_inun <- as.data.frame(freq(GCS2buff)) %>% 
+  subset(value == 1)
+
+overlapinun2018 <- (area_2018_GCS_inun$count + 
+    area_2018_GCS2_inun$count - 
+    area_2018_GCS_GCS2_inun$count)*30*30/10000
+
+# revised GCS and GCS2 areas
+GCSarea <- as.numeric((st_area(trk_2018_main_C2_buff[1,])/10000)) - 0.5*overlaparea2018 # GCS
+round(GCSarea)
+GCS2area <- as.numeric((st_area(trk_2018_main_C2_buff[3,])/10000)) - 0.5*overlaparea2018 # GCS2
+round(GCS2area)
+
+# revised GCS and GCS2  inundated areas
+GCSinun <- area_2018_GCS_inun$count*30*30/10000 - 0.5*overlapinun2018 # track 4
+GCS2inun <- area_2018_GCS2_inun$count*30*30/10000 - 0.5*overlapinun2018 # track 5
+ 
+# revised GCS and GCS2  inundated proportions
+GCSprop <- GCSinun/GCSarea*100
+GCSprop
+GCS2prop <- GCS2inun/GCS2area*100
+GCS2prop
+```
+
+```{r Overlap_2019}
+# first, visualise transects
+plot(inun_2019)
+plot(trk_2019_buff, add = TRUE)
+
+# prepare by creating a summary of inundated and non inundated areas in the overlap
+trk_2019_buff_C3_GCS_inun <- inun_2019 %>% 
+  crop(extent(trk_2019_buff[c(2,3),])) %>% 
+  mask(trk_2019_buff[c(2,3),])
+
+area_2019_C3_GCS <- as.data.frame(freq(trk_2019_buff_C3_GCS_inun)) 
+area_2019_C3_GCS_inun <- area_2019_C3_GCS %>% subset(value == 1)
+area_2019_C3_GCS_noninun <- area_2019_C3_GCS %>% subset(value == 0)
+
+# overlapped area = Cumbung 3 area + GCS area - combined area
+plot(trk_2019_buff_C3_GCS_inun)
+
+overlaparea2019 <- as.numeric(st_area(trk_2019_buff[2,])/10000) + 
+  as.numeric(st_area(trk_2019_buff[3,])/10000) - 
+  (area_2019_C3_GCS_inun$count + area_2019_C3_GCS_noninun$count)*10*10/10000 # account for cell size (10*10m sentinel)
+
+# overlapped inundation area (IA) = Cumbung 3 IA + GCS IA = combined IA
+trackC3buff <- inun_2019 %>% 
+  crop(extent(trk_2019_buff[2,])) %>% 
+  mask(trk_2019_buff[2,])
+trackGCSbuff <- inun_2019 %>% 
+  crop(extent(trk_2019_buff[3,])) %>% 
+  mask(trk_2019_buff[3,])
+
+plot(trackC3buff)
+plot(trackGCSbuff)
+
+area_2019_C3_inun <- as.data.frame(freq(trackC3buff)) %>% 
+  subset(value == 1)
+area_2019_GCS_inun <- as.data.frame(freq(trackGCSbuff)) %>% 
+  subset(value == 1)
+
+overlapinun2019 <- (area_2019_C3_inun$count + 
+    area_2019_GCS_inun$count - 
+    area_2019_C3_GCS_inun$count)*10*10/10000
+
+# revised track C3 and GCS areas
+trackC3area <- as.numeric((st_area(trk_2019_buff[2,])/10000)) - 0.5*overlaparea2019 # track 4
+round(trackC3area)
+trackGCSarea <- as.numeric((st_area(trk_2019_buff[3,])/10000)) - 0.5*overlaparea2019 # track 5
+round(trackGCSarea)
+
+# revised track C3 and GCS inundated areas
+trackC3inun <- area_2019_C3_inun$count*10*10/10000 - 0.5*overlapinun2019 # trackC3
+trackGCSinun <- area_2019_GCS_inun$count*10*10/10000 - 0.5*overlapinun2019 # track GCS
+ 
+# revised track C3 and GCS inundated proportions
+trackC3prop <- trackC3inun/trackC3area*100
+trackC3prop
+trackGCSprop <- trackGCSinun/trackGCSarea*100
+trackGCSprop
+
+```
+
+```{r Overlap_2020}
+# first, visualise transects
+plot(inun_2020)
+plot(trk_2020_main_C1_buff, add = TRUE)
+plot(trk_2020_Bac_C1_all_buff, add = TRUE)
+
+# prepare by creating a summary of inundated and non inundated areas in the overlap
+trk_2020_buff_E1_C3_inun <- inun_2020 %>% 
+  crop(extent(trk_2020_main_C1_buff[c(1,5),])) %>% 
+  mask(trk_2020_main_C1_buff[c(1,5),])
+
+area_2020_E1_C3 <- as.data.frame(freq(trk_2020_buff_E1_C3_inun)) 
+area_2020_E1_C3_inun <- area_2020_E1_C3 %>% subset(value == 1)
+area_2020_E1_C3_noninun <- area_2020_E1_C3 %>% subset(value == 0)
+
+# overlapped area = E1 area + C3 area - combined area
+plot(trk_2020_buff_E1_C3_inun)
+
+overlaparea2020 <- as.numeric(st_area(trk_2020_main_C1_buff[1,])/10000) + 
+  as.numeric(st_area(trk_2020_main_C1_buff[5,])/10000) - 
+  (area_2020_E1_C3_inun$count + area_2020_E1_C3_noninun$count)*10*10/10000 # account for cell size
+
+# overlapped inundation area (IA) = E1 IA + C3 IA = combined IA
+trackE1buff <- inun_2020 %>% 
+  crop(extent(trk_2020_main_C1_buff[1,])) %>% 
+  mask(trk_2020_main_C1_buff[1,])
+trackC3buff <- inun_2020 %>% 
+  crop(extent(trk_2020_main_C1_buff[5,])) %>% 
+  mask(trk_2020_main_C1_buff[5,])
+
+plot(trackE1buff)
+plot(trackC3buff)
+
+area_2020_E1_inun <- as.data.frame(freq(trackE1buff)) %>% 
+  subset(value == 1)
+area_2020_C3_inun <- as.data.frame(freq(trackC3buff)) %>% 
+  subset(value == 1)
+
+overlapinun2020 <- (area_2020_E1_inun$count + 
+    area_2020_C3_inun$count - 
+    area_2020_E1_C3_inun$count)*10*10/10000
+
+# revised E1 & C3 areas
+trackE1area <- as.numeric((st_area(trk_2020_main_C1_buff[1,])/10000)) - 0.5*overlaparea2020 # track E1
+round(trackE1area)
+trackC3area <- as.numeric((st_area(trk_2020_main_C1_buff[5,])/10000)) - 0.5*overlaparea2020 # track 5
+round(trackC3area)
+
+# revised E1 & C3 inundated areas
+trackE1inun <- area_2020_E1_inun$count*10*10/10000 - 0.5*overlapinun2020 # E1
+trackC3inun <- area_2020_C3_inun$count*10*10/10000 - 0.5*overlapinun2020 # C3
+ 
+# revised E1 & C3 inundated proportions
+trackE1prop <- trackE1inun/trackE1area*100
+trackE1prop
+trackC3prop <- trackC3inun/trackC3area*100
+trackC3prop
+
+
+# Count 2
+
+# first, visualise transects
+plot(inun_2020)
+plot(trk_2020_main_C2_buff, add = TRUE)
+plot(trk_2020_Bac_C2_all_buff, add = TRUE)
+
+# prepare by creating a summary of inundated and non inundated areas in the overlap
+trk_2020_buff_E1_C3_inun <- inun_2020 %>% 
+  crop(extent(trk_2020_main_C2_buff[c(1,4),])) %>% 
+  mask(trk_2020_main_C2_buff[c(1,4),])
+
+area_2020_E1_C3 <- as.data.frame(freq(trk_2020_buff_E1_C3_inun)) 
+area_2020_E1_C3_inun <- area_2020_E1_C3 %>% subset(value == 1)
+area_2020_E1_C3_noninun <- area_2020_E1_C3 %>% subset(value == 0)
+
+# overlapped area = E1 area + C3 area - combined area
+plot(trk_2020_buff_E1_C3_inun)
+
+overlaparea2020 <- as.numeric(st_area(trk_2020_main_C2_buff[1,])/10000) + 
+  as.numeric(st_area(trk_2020_main_C2_buff[4,])/10000) - 
+  (area_2020_E1_C3_inun$count + area_2020_E1_C3_noninun$count)*10*10/10000 # account for cell size
+
+# overlapped inundation area (IA) = E1 IA + C3 IA = combined IA
+trackE1buff <- inun_2020 %>% 
+  crop(extent(trk_2020_main_C2_buff[1,])) %>% 
+  mask(trk_2020_main_C2_buff[1,])
+trackC3buff <- inun_2020 %>% 
+  crop(extent(trk_2020_main_C2_buff[4,])) %>% 
+  mask(trk_2020_main_C2_buff[4,])
+
+plot(trackE1buff)
+plot(trackC3buff)
+
+area_2020_E1_inun <- as.data.frame(freq(trackE1buff)) %>% 
+  subset(value == 1)
+area_2020_C3_inun <- as.data.frame(freq(trackC3buff)) %>% 
+  subset(value == 1)
+
+overlapinun2020 <- (area_2020_E1_inun$count + 
+    area_2020_C3_inun$count - 
+    area_2020_E1_C3_inun$count)*10*10/10000
+
+# revised E1 & C3 areas
+trackE1area <- as.numeric((st_area(trk_2020_main_C2_buff[1,])/10000)) - 0.5*overlaparea2020 # track E1
+round(trackE1area)
+trackC3area <- as.numeric((st_area(trk_2020_main_C2_buff[4,])/10000)) - 0.5*overlaparea2020 # track 5
+round(trackC3area)
+
+# revised E1 & C3 inundated areas
+trackE1inun <- area_2020_E1_inun$count*10*10/10000 - 0.5*overlapinun2020 # E1
+trackC3inun <- area_2020_C3_inun$count*10*10/10000 - 0.5*overlapinun2020 # C3
+ 
+# revised E1 & C3 inundated proportions
+trackE1prop <- trackE1inun/trackE1area*100
+trackE1prop
+trackC3prop <- trackC3inun/trackC3area*100
+trackC3prop
+```
+
+## 5. Waterbird calculations
 
 Use the proportion inundated to calculate waterbird numbers for each species for the cumbung ecological boundary. Also keep current counts for lakes. Put these all in a table with total counts for each species.
 
--   **Make sure these calculations use up to date datasets!**
+These are examples - ongoing, we are doing the waterbird count part in The Duck Web.
 
 ```{r Waterbird_calculations}
 wb_2010_sub <- wb_2010 %>% 
@@ -1090,17 +1817,35 @@ wb_2010_sub <- wb_2010 %>%
 wb_2010_summary <- wb_2010_sub %>% 
   group_by(SPP) %>% 
   summarise(sum = sum(Count)) %>% 
-  mutate(extrap_count = round(sum * 100/Prop2010))
+  mutate(extrap_count = round(sum * 100/19.35)) # 19.35 is the count 1 proportion of inundated areas surveyed for 2010
+
+sum(wb_2010_sub$Count)
+sum(wb_2010_summary$extrap_count)
+
+
+wb_2011_sub <- wb_2011 %>% 
+  subset(NewSubWetland %in% c("Cumbung Swamp", "Cumbung Swamp (Blindbungi Lake)")) %>%  
+  subset(ReplicateCount == 1) 
+
+wb_2011_summary <- wb_2011_sub %>% 
+  group_by(SPP) %>% 
+  summarise(sum = sum(Count)) %>% 
+  mutate(extrap_count = round(sum * 100/35.8)) #35.8 is the count 1 proportion of inundated areas surveyed for 2011
+
+sum(wb_2011_sub$Count)
+sum(wb_2011_summary$extrap_count)
 
 
 wb_2016_sub <- wb_2016 %>% 
   subset(Date == "2016-11-09") %>% 
   subset(NewSubWetland == "Cumbung Swamp") %>% 
-  filter(str_detect(PDF_wetland, "Transect")) %>% 
   subset(ReplicateCount == 1) 
 
 wb_2016_summary <- wb_2016_sub %>% 
   group_by(SPP) %>% 
   summarise(sum = sum(Count)) %>% 
-  mutate(extrap_count = round(sum * 100/Prop2016))
+  mutate(extrap_count = round(sum * 100/11.17)) # 11.17 is the count 1 proportion of inundated areas surveyed on 9 Nov 2016
+
+sum(wb_2016_sub$Count)
+sum(wb_2016_summary$extrap_count)
 ```
