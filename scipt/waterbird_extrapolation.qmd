@@ -298,7 +298,7 @@ ggplot() +
 
 -   clip and buffer tracklogs
 
-    -   for cases where they are merged, separate the tracklogs from different dates and/or counts
+    -   for cases where they are merged, separate the tracklogs from different dates and/or counts and/or transect/meandering types
 
     -   buffer distance is 100m for transects and 150m for meandering tracklogs
 
@@ -548,9 +548,17 @@ plot(st_geometry(trk_2024_C1t_buff))
 trk_2024_C2t_buff <- bind_rows(trk_2024_C2_buff,trk_2024_transect_buff)
 plot(st_geometry(trk_2024_C2t_buff))
 
-# 2025 - all transects
-trk_2025_buff <- trk_2025 %>% 
+# 2025 - transects 1 and 2 are formal transects, and 3-6 are meandering
+trk_2025_buff_transects <- trk_2025 %>%
+  filter(name %in% c("Transect 1", "Transect 2")) %>% 
   st_buffer(dist = 100)
+trk_2025_buff_meandering <- trk_2025 %>%
+  filter(name %in% c("Transect 3", "Transect 4", "Transect 5", "Transect 6")) %>% 
+  st_buffer(dist = 150)
+# merge these datasets
+trk_2025_buff <- bind_rows(trk_2025_buff_transects, trk_2025_buff_meandering)
+plot(st_geometry(trk_2025_buff))
+# these unfortunately overlap, need to deal with in the overlap section below.
 ```
 
 Now, try plotting buffered tracklogs on their inundation maps.
@@ -1040,12 +1048,12 @@ colnames(Stats2024) <- c('Transect name', 'Area (ha)', 'Proportion inundated (%)
 
 # 2025
 Stats2025 <- matrix(c(AreaPropString("Overall wetland", inun_2025, cumbung_noBac, cumbung_noBac),
-                      AreaPropString("Transect 1", inun_2025, cumbung_noBac, trk_2025_buff[6,]),
+                      AreaPropString("Transect 1", inun_2025, cumbung_noBac, trk_2025_buff[2,]),
                       AreaPropString("Transect 2", inun_2025, cumbung_noBac, trk_2025_buff[1,]),
-                      AreaPropString("Transect 3", inun_2025, cumbung_noBac, trk_2025_buff[2,]),
-                      AreaPropString("Transect 4", inun_2025, cumbung_noBac, trk_2025_buff[3,]),
-                      AreaPropString("Transect 5", inun_2025, cumbung_noBac, trk_2025_buff[4,]),
-                      AreaPropString("Transect 6", inun_2025, cumbung_noBac, trk_2025_buff[5,])),
+                      AreaPropString("Transect 3", inun_2025, cumbung_noBac, trk_2025_buff[3,]),
+                      AreaPropString("Transect 4", inun_2025, cumbung_noBac, trk_2025_buff[4,]),
+                      AreaPropString("Transect 5", inun_2025, cumbung_noBac, trk_2025_buff[5,]),
+                      AreaPropString("Transect 6", inun_2025, cumbung_noBac, trk_2025_buff[6,])),
                ncol = 3, byrow = TRUE)
 colnames(Stats2025) <- c('Transect name', 'Area (ha)', 'Proportion inundated (%)')
 ```
@@ -1166,6 +1174,7 @@ In some years, buffered tracklogs overlap with one another (2010, 2017, 2018, 20
 -   In 2018, GCS and GCS2 overlap (lines 1 and 2 in trk_2018_main_C1_buff)
 -   In 2019, Cumbung 3 and GCS overlap (lines 2 and 3 in trk_2019_buff)
 -   In 2020, Cumbung E1 and Cumbung 3 overlap (lines 1 and 5 in trk_2020_main_C1_buff)
+-   In 2025, transects 3 & 5 overlap, and transects 4 & 6 overlap.
 
 Calculate the area of each overlapping buffered tracklog individually, and then their total area, to determine the area of the overlap.
 
@@ -1800,6 +1809,125 @@ trackE1prop <- trackE1inun/trackE1area*100
 trackE1prop
 trackC3prop <- trackC3inun/trackC3area*100
 trackC3prop
+```
+
+2025\.
+
+```{r overlap_2025}
+# first, visualise transects
+plot(inun_2025)
+plot(trk_2025_buff, add = TRUE)
+
+# transect 3 & 5 overlap
+
+# prepare by creating a summary of inundated and non inundated areas in the overlap
+trk_2025_buff_3_5_inun <- inun_2025 %>% 
+  crop(extent(trk_2025_buff[c(3,5),])) %>% 
+  mask(trk_2025_buff[c(3,5),])
+
+area_2025_3_5_ <- as.data.frame(freq(trk_2025_buff_3_5_inun)) 
+area_2025_3_5_inun <- area_2025_3_5_ %>% subset(value == 1)
+area_2025_3_5_noninun <- area_2025_3_5_ %>% subset(value == 0)
+
+# overlapped area = transect 3 area + transect 5 area - combined area
+plot(trk_2025_buff_3_5_inun)
+
+overlaparea2025 <- as.numeric(st_area(trk_2025_buff[3,])/10000) + 
+  as.numeric(st_area(trk_2025_buff[5,])/10000) - 
+  (area_2025_3_5_inun$count + area_2025_3_5_noninun$count)*30*30/10000 # account for cell size (30 * 30 as Landsat)
+
+# overlapped inundation area (IA) = T3 IA + T5 IA = combined IA
+track3buff <- inun_2025 %>% 
+  crop(extent(trk_2025_buff[3,])) %>% 
+  mask(trk_2025_buff[3,])
+track5buff <- inun_2025 %>% 
+  crop(extent(trk_2025_buff[5,])) %>% 
+  mask(trk_2025_buff[5,])
+
+plot(track3buff)
+plot(track5buff)
+
+area_2025_T3_inun <- as.data.frame(freq(track3buff)) %>% 
+  subset(value == 1)
+area_2025_T5_inun <- as.data.frame(freq(track5buff)) %>% 
+  subset(value == 1)
+
+overlapinun2025 <- (area_2025_T3_inun$count + 
+    area_2025_T5_inun$count - 
+    area_2025_3_5_inun$count)*30*30/10000
+
+# revised transect 3 & 5  areas
+track3area <- as.numeric((st_area(trk_2025_buff[3,])/10000)) - 0.5*overlaparea2025 # track E1
+round(track3area)
+track5area <- as.numeric((st_area(trk_2025_buff[5,])/10000)) - 0.5*overlaparea2025 # track 5
+round(track5area)
+
+# revised transect 3 & 5  inundated areas
+track3inun <- area_2025_T3_inun$count*30*30/10000 - 0.5*overlapinun2025 # E1
+track5inun <- area_2025_T5_inun$count*30*30/10000 - 0.5*overlapinun2025 # C3
+ 
+# revised transect 3 & 5 inundated proportions
+track3prop <- track3inun/track3area*100
+track3prop
+track5prop <- track5inun/track5area*100
+track5prop
+
+
+
+# transects 4 & 6 overlap
+
+# prepare by creating a summary of inundated and non inundated areas in the overlap
+trk_2025_buff_4_6_inun <- inun_2025 %>% 
+  crop(extent(trk_2025_buff[c(4,6),])) %>% 
+  mask(trk_2025_buff[c(4,6),])
+
+area_2025_4_6_ <- as.data.frame(freq(trk_2025_buff_4_6_inun)) 
+area_2025_4_6_inun <- area_2025_4_6_ %>% subset(value == 1)
+area_2025_4_6_noninun <- area_2025_4_6_ %>% subset(value == 0)
+
+# overlapped area = transect 4 area + transect 6 area - combined area
+plot(trk_2025_buff_4_6_inun)
+
+overlaparea2025 <- as.numeric(st_area(trk_2025_buff[4,])/10000) + 
+  as.numeric(st_area(trk_2025_buff[6,])/10000) - 
+  (area_2025_4_6_inun$count + area_2025_4_6_noninun$count)*30*30/10000 # account for cell size (30 * 30 as Landsat)
+
+# overlapped inundation area (IA) = T4 IA + T6 IA = combined IA
+track4buff <- inun_2025 %>% 
+  crop(extent(trk_2025_buff[4,])) %>% 
+  mask(trk_2025_buff[4,])
+track6buff <- inun_2025 %>% 
+  crop(extent(trk_2025_buff[6,])) %>% 
+  mask(trk_2025_buff[6,])
+
+plot(track4buff)
+plot(track6buff)
+
+area_2025_T4_inun <- as.data.frame(freq(track4buff)) %>% 
+  subset(value == 1)
+area_2025_T6_inun <- as.data.frame(freq(track6buff)) %>% 
+  subset(value == 1)
+
+overlapinun2025 <- (area_2025_T4_inun$count + 
+    area_2025_T6_inun$count - 
+    area_2025_4_6_inun$count)*30*30/10000
+
+# revised transect 4 & 6 areas
+track4area <- as.numeric((st_area(trk_2025_buff[4,])/10000)) - 0.5*overlaparea2025 # track 4
+round(track4area)
+track6area <- as.numeric((st_area(trk_2025_buff[6,])/10000)) - 0.5*overlaparea2025 # track 6
+round(track6area)
+
+# revised transect 4 & 6 inundated areas
+track4inun <- area_2025_T4_inun$count*30*30/10000 - 0.5*overlapinun2025 # 4
+track6inun <- area_2025_T6_inun$count*30*30/10000 - 0.5*overlapinun2025 # 6
+ 
+# revised E1 & C3 inundated proportions
+track4prop <- track4inun/track4area*100
+track4prop
+track6prop <- track6inun/track6area*100
+track6prop
+
 ```
 
 ## 5. Waterbird calculations
