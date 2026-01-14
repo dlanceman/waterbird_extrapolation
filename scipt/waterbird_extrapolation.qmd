@@ -677,6 +677,14 @@ plot(trk_2025_buff, add = TRUE)
 
 Now, clip the inundation rasters by the buffered tracklogs to determine the inundated area surveyed by tracklogs. Also clip inundation rasters to cumbung ecological boundary and calculate the inundated area in this total boundary. Then calculate the proportion of inundated area surveyed out of the total inundated area.
 
+Before this, rearrange our buffered transects into a sensible order. Right now, they're in a random order, which makes it more difficult to call specific transects.
+
+Note, I haven't done this for every year so the other years are still in a non-arranged order and hence I've called haphazard numbers in the steps below. But I recommend you do this for all your buffered tracklogs!
+
+```{r Reorder_buffered_transects}
+trk_2010_buff <- trk_2010_buff %>% arrange(TransLabel)
+```
+
 Using different boundary files depending on if Baconian swamp and Marool lake are included as part of the cumbung ecological boundary for that year's survey:
 
 -   2010: cumbung_eco
@@ -712,6 +720,8 @@ Using different boundary files depending on if Baconian swamp and Marool lake ar
 -   2025: cumbung_noBac
 
 For years with transect data, the output needed for input into TDW is an overall area and percentage inundated of the entire Great Cumbung Swamp, and an area and percentage inundated of each buffered tracklog. The names of each tracklog section are stored in the attribute tables of the shapefiles under the field "TransLabel".
+
+Note, the function below this contains everything in a table, so feel free to skip this step.
 
 ```{r AreasProportions}
 # Function to calculate area and proportion in a specific area
@@ -807,11 +817,11 @@ AreaPropString10 <- function(name, rasterf, boundary, buffboundary){
 Stats2010 <- matrix(c(AreaPropString("Overall wetland", inun_2010, cumbung_eco, cumbung_eco),
                       AreaPropString("Cumbung Transect 1", inun_2010, cumbung_eco, trk_2010_buff[1,]),
                       AreaPropString("Cumbung Transect 2", inun_2010, cumbung_eco, trk_2010_buff[2,]),
-                      AreaPropString("Cumbung Transect 3", inun_2010, cumbung_eco, trk_2010_buff[6,]),
-                      AreaPropString("Cumbung Transect 4", inun_2010, cumbung_eco, trk_2010_buff[7,]),
-                      AreaPropString("Cumbung Transect 5", inun_2010, cumbung_eco, trk_2010_buff[4,]),
-                      AreaPropString("Cumbung Transect 6", inun_2010, cumbung_eco, trk_2010_buff[5,]),
-                      AreaPropString("Cumbung Transect 7", inun_2010, cumbung_eco, trk_2010_buff[3,]),
+                      AreaPropString("Cumbung Transect 3", inun_2010, cumbung_eco, trk_2010_buff[3,]),
+                      AreaPropString("Cumbung Transect 4", inun_2010, cumbung_eco, trk_2010_buff[4,]),
+                      AreaPropString("Cumbung Transect 5", inun_2010, cumbung_eco, trk_2010_buff[5,]),
+                      AreaPropString("Cumbung Transect 6", inun_2010, cumbung_eco, trk_2010_buff[6,]),
+                      AreaPropString("Cumbung Transect 7", inun_2010, cumbung_eco, trk_2010_buff[7,]),
                       AreaPropString("Cumbung AA Count 1", inun_2010, cumbung_eco, trk_2010_AA_C1_buff),
                       AreaPropString("Cumbung AA Count 2", inun_2010, cumbung_eco, trk_2010_AA_C2_buff)),
                ncol = 3, byrow = TRUE)
