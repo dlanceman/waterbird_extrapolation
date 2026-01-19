@@ -679,7 +679,7 @@ Now, clip the inundation rasters by the buffered tracklogs to determine the inun
 
 Before this, rearrange our buffered transects into a sensible order. Right now, they're in a random order, which makes it more difficult to call specific transects.
 
-Note, I haven't done this for every year so the other years are still in a non-arranged order and hence I've called haphazard numbers in the steps below. But I recommend you do this for all your buffered tracklogs!
+Note, I haven't done this for every year so the other years are still in a non-arranged order and hence I've called haphazard numbers in the steps below. But I recommend you do this for all your buffered tracklogs! If you have more than 9 transects, you will still have to go into the transect file and check what row each of them are assigned for the below steps, as it will usually organise 10 after 1 and 2 rather than after 9.
 
 ```{r Reorder_buffered_transects}
 trk_2010_buff <- trk_2010_buff %>% arrange(TransLabel)
@@ -811,6 +811,7 @@ AreaPropString10 <- function(name, rasterf, boundary, buffboundary){
   print(c(name, a, p))
 }
 
+# the [1,] etc in brackets indicates what row that transect is located in.
 
 
 # 2010
